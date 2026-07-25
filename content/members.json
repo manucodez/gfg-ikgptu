@@ -1,0 +1,402 @@
+[
+  {
+    "id": "m-01",
+    "name": "Reshab Banerjee",
+    "avatar": "/images/members/reshab.jpg",
+    "role": "Campus Mantri",
+    "team": "Core Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "Coordinates chapter strategy and represents the chapter to the university administration and the GFG campus body program.",
+    "skills": [
+      "Leadership"
+    ],
+    "socials": {
+      "github": "https://github.com/",
+      "linkedin": "https://linkedin.com/in/reshab-banerjee-76978b323",
+      "email": "reshavbanerjee@gmail.com"
+    }
+  },
+  {
+    "id": "m-02",
+    "name": "Samyak Jain",
+    "avatar": "/images/members/samyak.jpeg",
+    "role": "PR Head",
+    "team": "Public Relations & Outreach Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-03",
+    "name": "Sagnik Rudra",
+    "avatar": "/images/members/sagnik.jpeg",
+    "role": "PR Co-Head",
+    "team": "Public Relations & Outreach Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [
+      "Public Relations"
+    ],
+    "socials": {}
+  },
+  {
+    "id": "m-04",
+    "name": "Om Talwar",
+    "avatar": "/images/members/om.jpeg",
+    "role": "Technical Head",
+    "team": "Technical Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-05",
+    "name": "Manjeet Kumar",
+    "avatar": "/images/members/manjeet.jpeg",
+    "role": "Technical Co-Head",
+    "team": "Technical Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "Maintains the chapter's internal tooling and this website.",
+    "skills": [
+      "C++",
+      "Algorithms",
+      "Mentorship"
+    ],
+    "socials": {
+      "linkedin": "https://linkedin.com/manjeetcodez"
+    }
+  },
+  {
+    "id": "m-06",
+    "name": "Kaushal Patel",
+    "avatar": "/images/members/kaushal.jpeg",
+    "role": "G&D Head",
+    "team": "Graphics & Design Team",
+    "year": "2nd Year",
+    "branch": "BCA",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/kaushal2006",
+      "portfolio": "https://www.behance.net/kaushal2006"
+    }
+  },
+  {
+    "id": "m-07",
+    "name": "Raj Aryan Sharma",
+    "avatar": "/images/members/raj.jpeg",
+    "role": "G&D Co-Head",
+    "team": "Graphics & Design Team",
+    "year": "2nd Year",
+    "branch": "BCA",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/raj-aryan-04838b375"
+    }
+  },
+  {
+    "id": "m-08",
+    "name": "Keerti Chauhan",
+    "avatar": "/images/members/keerti.jpeg",
+    "role": "Social Media Head",
+    "team": "Social Media Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-09",
+    "name": "Palak",
+    "avatar": "/images/members/palak.jpeg",
+    "role": "Social Media Co-Head",
+    "team": "Social Media Team",
+    "year": "2nd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/palak-860b533ba"
+    }
+  },
+  {
+    "id": "m-10",
+    "name": "Palvi Kumari",
+    "avatar": "/images/members/palvi.jpeg",
+    "role": "CC Head",
+    "team": "Content Creation Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/palvi-kumari-2895b1311"
+    }
+  },
+  {
+    "id": "m-11",
+    "name": "Astha Bajaj",
+    "avatar": "/images/members/astha.jpeg",
+    "role": "CC Co-Head",
+    "team": "Content Creation Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-12",
+    "name": "Ishmeet Kaur",
+    "avatar": "/images/members/ishmeet.jpg",
+    "role": "EM Head",
+    "team": "Event Management Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-13",
+    "name": "Vikalp Upadhyay",
+    "avatar": "/images/members/vikalp.jpg",
+    "role": "EM Co-Head",
+    "team": "Event Management Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [
+      "Event Management",
+      "Negotiation"
+    ],
+    "socials": {}
+  },
+  {
+    "id": "m-14",
+    "name": "Priyanshi Upadhyay",
+    "avatar": "/images/members/pri.jpeg",
+    "role": "Executive Member",
+    "team": "Social Media Team",
+    "year": "2nd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/priyanshi-upadhyay-a41473383"
+    }
+  },
+  {
+    "id": "m-15",
+    "name": "Kriti Priya",
+    "avatar": "/images/members/kriti.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/kriti-priya-271648323"
+    }
+  },
+  {
+    "id": "m-16",
+    "name": "Saksham Kumar",
+    "avatar": "/images/members/saksham.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-17",
+    "name": "Srishti Sharma",
+    "avatar": "/images/members/sri.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "3rd Year",
+    "branch": "B.Tech ECE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-18",
+    "name": "Nischal",
+    "avatar": "/images/members/nischal.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "2nd Year",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-19",
+    "name": "Saiyam Parmar",
+    "avatar": "/images/members/saiyam.jpeg",
+    "role": "Executive Member",
+    "team": "Graphics & Design Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-20",
+    "name": "Vijay Maurya",
+    "avatar": "/images/members/vivek.jpeg",
+    "role": "Executive Member",
+    "team": "Graphics & Design Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-21",
+    "name": "Karti Sharma",
+    "avatar": "/images/members/karti.jpeg",
+    "role": "Executive Member",
+    "team": "Social Media Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-22",
+    "name": "Taranpreet Kaur",
+    "avatar": "/images/members/taran.jpeg",
+    "role": "Executive Member",
+    "team": "Content Creation Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/taranpreet-kaur-950801322"
+    }
+  },
+  {
+    "id": "m-23",
+    "name": "Maneshwar Sharma",
+    "avatar": "/images/members/maneshwar.jpeg",
+    "role": "Executive Member",
+    "team": "Content Creation Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-24",
+    "name": "Shivam Mishra",
+    "avatar": "/images/members/shivam.jpeg",
+    "role": "Executive Member",
+    "team": "Technical Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/shivam-mishra-489a82373"
+    }
+  },
+  {
+    "id": "m-25",
+    "name": "Simran Chaudhary",
+    "avatar": "/images/members/simran.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-26",
+    "name": "Vishali",
+    "avatar": "/images/members/vishali.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "",
+    "branch": "",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  },
+  {
+    "id": "m-27",
+    "name": "Saniya Singh",
+    "avatar": "/images/members/saniya.jpeg",
+    "role": "Executive Member",
+    "team": "Event Management Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/saniya-s-a57918346"
+    }
+  },
+  {
+    "id": "m-28",
+    "name": "Kumar Sanu",
+    "avatar": "/images/members/sanu.jpeg",
+    "role": "Executive Member",
+    "team": "Content Creation Team",
+    "year": "2nd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/kumar-sanu-323a41422"
+    }
+  },
+  {
+    "id": "m-29",
+    "name": "Sumit Mandal",
+    "avatar": "/images/members/sumit.jpeg",
+    "role": "Executive Member",
+    "team": "Graphics & Design Team",
+    "year": "2nd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {
+      "linkedin": "https://linkedin.com/in/sumit-mandal-540471423"
+    }
+  },
+  {
+    "id": "m-30",
+    "name": "Ridhima",
+    "avatar": "/images/members/ridh.jpeg",
+    "role": "Executive Member",
+    "team": "Technical Team",
+    "year": "3rd Year",
+    "branch": "B.Tech CSE",
+    "bio": "",
+    "skills": [],
+    "socials": {}
+  }
+]

@@ -1,0 +1,47 @@
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
+import { SESSION_COOKIES, verifySessionToken, type AdminSessionPayload } from "@/lib/session";
+import { LogoutButton } from "@/components/auth/logout-button";
+import { AdminDashboard } from "@/components/admin/admin-dashboard";
+
+export default async function AdminPage() {
+  const token = cookies().get(SESSION_COOKIES.admin)?.value;
+  const session = token ? await verifySessionToken<AdminSessionPayload>(token) : null;
+
+  // middleware.ts already redirects unauthenticated requests away from
+  // /admin — this check just keeps the page correct if it's ever
+  // rendered directly.
+  if (!session) {
+    redirect("/admin/login");
+  }
+
+  return (
+    <main className="min-h-screen bg-paper dark:bg-surface-dark">
+      <div className="border-b border-ink-900/10 bg-white dark:border-white/10 dark:bg-surface-darkRaised">
+        <div className="container flex items-center justify-between py-5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+              <ShieldCheck className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="font-display text-sm font-semibold leading-tight">Admin Dashboard</p>
+              <p className="text-xs text-ink-500 dark:text-white/50">{session.email}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-sm text-ink-500 hover:text-brand-600 dark:text-white/60">
+              View site
+            </Link>
+            <LogoutButton endpoint="/api/admin/logout" redirectTo="/admin/login" />
+          </div>
+        </div>
+      </div>
+
+      <div className="container max-w-4xl py-10">
+        <AdminDashboard />
+      </div>
+    </main>
+  );
+}

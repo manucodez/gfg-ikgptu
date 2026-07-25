@@ -1,0 +1,42 @@
+[
+  {
+    "id": "g-01",
+    "caption": "Orientation Day 2026",
+    "category": "Chapter Life"
+  },
+  {
+    "id": "g-02",
+    "caption": "DSA Bootcamp — Day 3",
+    "category": "Workshop"
+  },
+  {
+    "id": "g-03",
+    "caption": "Hackathon Finalists",
+    "category": "Hackathon"
+  },
+  {
+    "id": "g-04",
+    "caption": "Industry Speaker Session",
+    "category": "Session"
+  },
+  {
+    "id": "g-05",
+    "caption": "Weekly Contest Winners",
+    "category": "Contest"
+  },
+  {
+    "id": "g-06",
+    "caption": "Git Workshop Hands-on",
+    "category": "Workshop"
+  },
+  {
+    "id": "g-07",
+    "caption": "Core Team Planning Meet",
+    "category": "Chapter Life"
+  },
+  {
+    "id": "g-08",
+    "caption": "Campus Outreach Drive",
+    "category": "Chapter Life"
+  }
+]

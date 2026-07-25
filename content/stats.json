@@ -1,0 +1,6 @@
+[
+  { "id": "s-01", "label": "Active Members", "value": 520, "suffix": "+" },
+  { "id": "s-02", "label": "Events Hosted", "value": 24 },
+  { "id": "s-03", "label": "Workshops Delivered", "value": 12 },
+  { "id": "s-04", "label": "Student Projects", "value": 40, "suffix": "+" }
+]

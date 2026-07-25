@@ -1,0 +1,69 @@
+[
+  {
+    "id": "e-01",
+    "title": "DSA Bootcamp: Zero to Contest-Ready",
+    "date": "12–16 Aug 2026",
+    "location": "CS Seminar Hall, IKGPTU Main Campus",
+    "description": "A five-day intensive covering arrays through graphs, closing with a rated internal contest.",
+    "status": "upcoming",
+    "tags": [
+      "Bootcamp",
+      "Workshop"
+    ]
+  },
+  {
+    "id": "e-02",
+    "title": "GFG Campus Hackathon 2026",
+    "date": "5–6 Sep 2026",
+    "location": "Innovation Lab, Block C",
+    "description": "A 24-hour build sprint for student teams, judged by faculty and industry mentors on working prototypes.",
+    "status": "upcoming",
+    "tags": [
+      "Hackathon"
+    ]
+  },
+  {
+    "id": "e-03",
+    "title": "Weekly Rated Contest #14",
+    "date": "Every Sunday, 6 PM",
+    "location": "Online — Chapter Judge Platform",
+    "description": "A standing weekly contest open to all members, with a live leaderboard and post-contest discussion.",
+    "status": "live",
+    "tags": [
+      "Contest"
+    ]
+  },
+  {
+    "id": "e-04",
+    "title": "Industry Session: Building at Scale",
+    "date": "18 Jul 2026",
+    "location": "Auditorium",
+    "description": "An engineer from a product company walked through real scaling decisions behind a large-traffic system.",
+    "status": "past",
+    "tags": [
+      "Session"
+    ]
+  },
+  {
+    "id": "e-05",
+    "title": "Git & GitHub for First-Years",
+    "date": "2 Jul 2026",
+    "location": "CS Lab 2",
+    "description": "A hands-on introduction to version control, branching, and opening a first pull request.",
+    "status": "past",
+    "tags": [
+      "Workshop"
+    ]
+  },
+  {
+    "id": "e-06",
+    "title": "Orientation & Onboarding Drive",
+    "date": "20 Jun 2026",
+    "location": "Main Lawn",
+    "description": "The chapter's yearly kickoff — team introductions, activity walkthrough, and new-member sign-ups.",
+    "status": "past",
+    "tags": [
+      "Session"
+    ]
+  }
+]

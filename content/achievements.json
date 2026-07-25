@@ -1,0 +1,26 @@
+[
+  {
+    "id": "a-01",
+    "title": "Best Emerging Campus Chapter",
+    "description": "Recognized among GFG campus chapters in the region for consistency of activity in the chapter's first full year.",
+    "date": "2026-03-01"
+  },
+  {
+    "id": "a-02",
+    "title": "Smart India Hackathon — Finalist Team",
+    "description": "A four-member chapter team reached the national finals with a campus safety monitoring project.",
+    "date": "2026-01-15"
+  },
+  {
+    "id": "a-03",
+    "title": "500+ Members Onboarded",
+    "description": "Crossed 500 registered members across three engineering branches within two semesters of launch.",
+    "date": "2025-11-01"
+  },
+  {
+    "id": "a-04",
+    "title": "12 Workshops Conducted",
+    "description": "Delivered a full workshop track spanning DSA, web development, and Git fundamentals for first-year students.",
+    "date": "2025-06-01"
+  }
+]
