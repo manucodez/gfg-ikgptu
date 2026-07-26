@@ -38,7 +38,7 @@ export function GallerySection({ galleryItems }: GallerySectionProps) {
             </>
           ) : (
             <p className="text-center text-sm text-ink-500 dark:text-white/50">
-              No photos yet — add some from the admin dashboard.
+              No photos yet.
             </p>
           )}
         </div>
