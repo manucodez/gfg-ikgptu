@@ -48,6 +48,19 @@
   .card-surface {
     @apply bg-white dark:bg-surface-darkRaised border border-ink-900/10 dark:border-white/10 rounded-2xl shadow-soft;
   }
+
+  /* For elements that scroll horizontally by design (e.g. a tab strip
+     that doesn't fit on a phone screen) — the scroll still works with
+     touch/trackpad, this just hides the OS scrollbar chrome so it
+     reads as an intentional pill-strip rather than an overflowing,
+     broken-looking list. */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

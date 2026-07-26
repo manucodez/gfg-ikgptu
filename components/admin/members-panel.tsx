@@ -132,7 +132,7 @@ export function MembersPanel() {
         {viewingAvatarOf && (
           <DialogContent className="sm:max-w-md">
             <div className="p-6">
-              <DialogTitle className="font-display text-lg font-medium">
+              <DialogTitle className="break-words pr-6 font-display text-lg font-medium">
                 {viewingAvatarOf.name}&apos;s photo
               </DialogTitle>
               <div className="mt-4 flex justify-center">

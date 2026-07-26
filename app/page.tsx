@@ -18,9 +18,9 @@ import {
 } from "@/lib/content-store";
 import { getLoggedInMember } from "@/lib/current-member";
 
-// Content (members/events/gallery/stats/achievements) now lives in
-// /content/*.json and can change at runtime via the admin dashboard,
-// so this page reads it fresh on every request instead of being
+// Content (members/events/gallery/stats/achievements) lives in the
+// database now and can change at runtime via the admin dashboard, so
+// this page reads it fresh on every request instead of being
 // statically generated at build time.
 export const dynamic = "force-dynamic";
 

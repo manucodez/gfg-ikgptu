@@ -29,10 +29,10 @@ export function MemberProfilePanel({ member, onOpenChange }: MemberProfilePanelP
       {member && (
         <DialogContent>
           <div className="p-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 pr-6">
               <Avatar name={member.name} avatar={member.avatar} size={72} className="shadow-soft" />
-              <div>
-                <DialogTitle className="font-display text-xl font-medium">
+              <div className="min-w-0">
+                <DialogTitle className="break-words font-display text-xl font-medium">
                   {member.name}
                 </DialogTitle>
                 <DialogDescription className="text-sm text-ink-500 dark:text-white/60">

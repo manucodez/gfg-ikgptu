@@ -89,14 +89,22 @@ export function Hero({ members, eventCount }: HeroProps) {
               )}
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2 rounded-xl bg-ink-900/[0.03] px-3 py-2 dark:bg-white/5">
-                <CalendarDays className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+              <button
+                type="button"
+                onClick={() => scrollTo("events")}
+                className="flex items-center gap-2 rounded-xl bg-ink-900/[0.03] px-3 py-2 text-left transition-colors hover:bg-ink-900/[0.06] dark:bg-white/5 dark:hover:bg-white/10"
+              >
+                <CalendarDays className="h-4 w-4 shrink-0 text-brand-600 dark:text-brand-400" />
                 {eventCount} events run
-              </div>
-              <div className="flex items-center gap-2 rounded-xl bg-ink-900/[0.03] px-3 py-2 dark:bg-white/5">
-                <Images className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo("gallery")}
+                className="flex items-center gap-2 rounded-xl bg-ink-900/[0.03] px-3 py-2 text-left transition-colors hover:bg-ink-900/[0.06] dark:bg-white/5 dark:hover:bg-white/10"
+              >
+                <Images className="h-4 w-4 shrink-0 text-brand-600 dark:text-brand-400" />
                 Live gallery
-              </div>
+              </button>
             </div>
           </div>
         </motion.div>

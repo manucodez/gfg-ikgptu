@@ -212,13 +212,13 @@ export function GalleryPanel() {
                 <span className="truncate text-[10px] text-ink-500 dark:text-white/40">{item.caption}</span>
               </div>
             )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-5">
               <p className="truncate text-[11px] font-medium text-white">{item.caption}</p>
               {item.description && (
                 <p className="line-clamp-2 text-[10px] text-white/70">{item.description}</p>
               )}
             </div>
-            <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute right-1.5 top-1.5 flex gap-1">
               <button
                 type="button"
                 onClick={() => startEdit(item)}
