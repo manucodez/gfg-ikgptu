@@ -75,8 +75,8 @@ export function ContactSection() {
           <div className="mt-8 card-surface p-5">
             <p className="text-sm text-ink-500 dark:text-white/60">
               Prefer email? Reach the core team directly at{" "}
-              <a href="mailto:hello@gfg-ikgptu.org" className="font-medium text-brand-700 dark:text-brand-400">
-                hello@gfg-ikgptu.org
+              <a href="mailto:gfgikgptu@gmail.com" className="font-medium text-brand-700 dark:text-brand-400">
+                gfgikgptu@gmail.com
               </a>
             </p>
           </div>
