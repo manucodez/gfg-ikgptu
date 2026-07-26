@@ -19,7 +19,7 @@ export function GallerySection({ galleryItems }: GallerySectionProps) {
         <SectionHeading
           eyebrow="Gallery"
           title="Moments from the chapter."
-          description="Workshops, hackathons, speaker sessions, and everything in between. Admins can add new photos from the admin dashboard."
+          description="Workshops, hackathons, speaker sessions, and everything in between."
         />
 
         <div className="mt-10 space-y-4">
