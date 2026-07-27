@@ -36,44 +36,44 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ink-900 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-paper px-4 dark:bg-surface-dark">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-white">
             <ShieldCheck className="h-5 w-5" />
           </span>
-          <h1 className="mt-4 font-display text-2xl font-medium text-white">Admin Login</h1>
-          <p className="mt-1 text-sm text-white/50">
+          <h1 className="mt-4 font-display text-2xl font-medium">Admin Login</h1>
+          <p className="mt-1 text-sm text-ink-500 dark:text-white/60">
             GFG Campus Chapter · IKGPTU — restricted access
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-white/10 bg-surface-darkRaised p-6 shadow-raised">
+        <form onSubmit={handleSubmit} className="card-surface space-y-4 p-6">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-white/80">Admin email</label>
+            <label className="mb-1.5 block text-sm font-medium">Admin email</label>
             <Input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@gfg-ikgptu.org"
-              className="border-white/15 bg-white/5 text-white placeholder:text-white/30"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-white/80">Password</label>
+            <label className="mb-1.5 block text-sm font-medium">Password</label>
             <Input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="border-white/15 bg-white/5 text-white placeholder:text-white/30"
             />
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm text-red-400">{error}</p>
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-400">
+              {error}
+            </p>
           )}
 
           <Button type="submit" className="w-full" disabled={loading}>
@@ -81,8 +81,11 @@ export default function AdminLoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-white/40">
-          Not an admin? <Link href="/login" className="font-medium text-brand-400">Member login</Link>
+        <p className="mt-6 text-center text-sm text-ink-500 dark:text-white/50">
+          Not an admin?{" "}
+          <Link href="/login" className="font-medium text-brand-700 dark:text-brand-400">
+            Member login
+          </Link>
         </p>
       </div>
     </main>

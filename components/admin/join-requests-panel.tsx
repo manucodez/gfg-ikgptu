@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mail, Archive, Undo2, Trash2 } from "lucide-react";
+import { Mail, Archive, Undo2, Trash2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { JoinRequest, JoinRequestStatus } from "@/lib/types";
 import { formatDisplayDate } from "@/lib/utils";
@@ -99,6 +99,16 @@ export function JoinRequestsPanel({ onNewCountChange }: JoinRequestsPanelProps =
               {r.message && (
                 <p className="mt-2 max-w-2xl text-sm text-ink-700 dark:text-white/70">{r.message}</p>
               )}
+              {r.resumeUrl && (
+                <a
+                  href={r.resumeUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm text-brand-700 hover:underline dark:text-brand-400"
+                >
+                  <FileText className="h-3.5 w-3.5" /> View resume
+                </a>
+              )}
             </div>
 
             <div className="flex shrink-0 gap-1">
@@ -118,7 +128,7 @@ export function JoinRequestsPanel({ onNewCountChange }: JoinRequestsPanelProps =
                   onClick={() => setStatus(r.id, "archived")}
                   disabled={busyId === r.id}
                   aria-label="Archive"
-                  className="rounded-full p-2 text-ink-500 hover:bg-ink-900/5 disabled:opacity-50 dark:text-white/50 dark:hover:bg-white/10"
+                  className="rounded-full p-2.5 text-ink-500 hover:bg-ink-900/5 disabled:opacity-50 dark:text-white/50 dark:hover:bg-white/10"
                 >
                   <Archive className="h-4 w-4" />
                 </button>
@@ -128,7 +138,7 @@ export function JoinRequestsPanel({ onNewCountChange }: JoinRequestsPanelProps =
                   onClick={() => setStatus(r.id, "new")}
                   disabled={busyId === r.id}
                   aria-label="Restore"
-                  className="rounded-full p-2 text-ink-500 hover:bg-ink-900/5 disabled:opacity-50 dark:text-white/50 dark:hover:bg-white/10"
+                  className="rounded-full p-2.5 text-ink-500 hover:bg-ink-900/5 disabled:opacity-50 dark:text-white/50 dark:hover:bg-white/10"
                 >
                   <Undo2 className="h-4 w-4" />
                 </button>
@@ -138,7 +148,7 @@ export function JoinRequestsPanel({ onNewCountChange }: JoinRequestsPanelProps =
                 onClick={() => handleDelete(r.id)}
                 disabled={busyId === r.id}
                 aria-label="Delete"
-                className="rounded-full p-2 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                className="rounded-full p-2.5 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/30"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

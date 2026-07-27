@@ -128,8 +128,8 @@ app/
   login/page.tsx                      Member login (email + password)
   reset-password/page.tsx             OTP-verified "forgot / set password" flow
   admin/login/page.tsx                Admin login
-  admin/page.tsx                      Admin dashboard (protected) — Join Requests, Requests,
-                                        Members, Events, Gallery, Stats, Achievements
+  admin/page.tsx                      Admin dashboard (protected) — Join Requests, Activity,
+                                        Requests, Members, Events, Gallery, Stats, Achievements
   dashboard/page.tsx                  Member profile + email editor (protected)
   api/join/route.ts                   Public: where the homepage "Join" form submits to
   api/auth/login,logout/route.ts      Member auth endpoints
@@ -142,6 +142,7 @@ app/
   api/admin/stats/…                   Homepage stat-tile CRUD
   api/admin/achievements/…            Achievement CRUD
   api/admin/join-requests/…           Review "Join" form submissions (status, delete)
+  api/admin/login-events/route.ts     Recent member logins, polled by the Activity tab
   api/admin/requests/…                Approve/reject member change requests
                                         (profile edits and email changes)
   api/member/request-change/route.ts  Where a member submits a profile-change request

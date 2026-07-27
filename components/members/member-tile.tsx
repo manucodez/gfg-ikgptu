@@ -27,6 +27,7 @@ export function MemberTile({ member, onSelect }: MemberTileProps) {
           name={member.name}
           avatar={member.avatar}
           size={84}
+          minSize={60}
           className="shadow-soft ring-2 ring-transparent transition-all group-hover:ring-brand-400 group-focus-visible:ring-brand-400"
         />
         <div className="pointer-events-none absolute inset-0 hidden items-end justify-center rounded-full bg-ink-900/70 opacity-0 transition-opacity group-hover:flex group-hover:opacity-100">

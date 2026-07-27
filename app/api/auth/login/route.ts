@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findMemberByEmail, getCredentialForMember } from "@/lib/content-store";
+import { findMemberByEmail, getCredentialForMember, addLoginEvent } from "@/lib/content-store";
 import { verifyPassword } from "@/lib/password";
 import { createMemberSessionToken, SESSION_COOKIES } from "@/lib/session";
 
@@ -44,6 +44,14 @@ export async function POST(request: Request) {
   if (!valid) {
     return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
   }
+
+  // Fire-and-forget-ish: awaited so it's reliably recorded, but never
+  // blocks or fails the actual login if something's briefly wrong with
+  // it — a missed activity-log row is a minor loss, a broken login
+  // over it would not be.
+  await addLoginEvent(member.id, member.name, request.headers.get("user-agent") ?? undefined).catch(
+    () => {}
+  );
 
   const token = await createMemberSessionToken({
     role: "member",

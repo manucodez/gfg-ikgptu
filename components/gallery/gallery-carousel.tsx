@@ -31,7 +31,7 @@ export function GalleryCarousel({ items, active, onActiveChange }: GalleryCarous
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="relative aspect-[16/9] w-full">
+      <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
         <AnimatePresence mode="wait">
           <motion.div
             key={current.id}

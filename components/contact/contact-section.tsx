@@ -25,17 +25,17 @@ export function ContactSection() {
 
     const form = e.currentTarget;
     const data = new FormData(form);
+    // If no file was picked, the input still sends an empty File
+    // under "resume" — strip it so the server can tell "no resume"
+    // apart from "a zero-byte file named ''".
+    const resume = data.get("resume");
+    if (resume instanceof File && resume.size === 0) {
+      data.delete("resume");
+    }
 
     const res = await fetch("/api/join", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: data.get("name"),
-        email: data.get("email"),
-        branch: data.get("branch"),
-        year: data.get("year"),
-        message: data.get("message"),
-      }),
+      body: data,
     });
 
     if (res.ok) {
@@ -75,8 +75,8 @@ export function ContactSection() {
           <div className="mt-8 card-surface p-5">
             <p className="text-sm text-ink-500 dark:text-white/60">
               Prefer email? Reach the core team directly at{" "}
-              <a href="mailto:gfgikgptu@gmail.com" className="font-medium text-brand-700 dark:text-brand-400">
-                gfgikgptu@gmail.com
+              <a href="mailto:hello@gfg-ikgptu.org" className="font-medium text-brand-700 dark:text-brand-400">
+                hello@gfg-ikgptu.org
               </a>
             </p>
           </div>
@@ -106,6 +106,19 @@ export function ContactSection() {
                 placeholder="What would you like to contribute or learn?"
                 rows={4}
               />
+              <div>
+                <label htmlFor="resume" className="mb-1.5 block text-sm font-medium">
+                  Resume / CV <span className="font-normal text-ink-500 dark:text-white/40">(optional)</span>
+                </label>
+                <input
+                  id="resume"
+                  type="file"
+                  name="resume"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  className="block w-full text-sm text-ink-500 file:mr-3 file:rounded-full file:border-0 file:bg-brand-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700 dark:text-white/50 dark:file:bg-brand-900/40 dark:file:text-brand-400"
+                />
+                <p className="mt-1 text-xs text-ink-500 dark:text-white/40">PDF or Word, up to 5MB.</p>
+              </div>
               {error && (
                 <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-400">
                   {error}

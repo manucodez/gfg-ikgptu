@@ -204,6 +204,23 @@ export interface JoinRequest {
   year: string;
   /** Optional — "what would you like to contribute or learn?" */
   message?: string;
+  /** Cloudinary URL of an uploaded resume/CV, if the person attached one. */
+  resumeUrl?: string;
   submittedAt: string; // ISO timestamp
   status: JoinRequestStatus;
+}
+
+/**
+ * A record of one successful member login — powers the admin
+ * dashboard's Activity tab so an admin can see who's actively using
+ * their account. Deliberately doesn't track IP address (privacy);
+ * userAgent is included since "logged in from an iPhone" is useful
+ * context without being as sensitive as a precise IP/location.
+ */
+export interface LoginEvent {
+  id: string;
+  memberId: string;
+  memberName: string;
+  loggedInAt: string; // ISO timestamp
+  userAgent?: string;
 }

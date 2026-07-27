@@ -35,6 +35,36 @@ export async function uploadImage(
   return result.secure_url;
 }
 
+/**
+ * Uploads a non-image file (resume/CV) to Cloudinary as a "raw"
+ * resource — Cloudinary treats PDFs/Word docs as a different resource
+ * type than photos, so this can't reuse uploadImage above. The
+ * public_id embeds a timestamp + the sanitized original filename, so
+ * the resulting URL stays a readable, correctly-extensioned link
+ * (e.g. .../resumes/1737912345678-jane_doe_resume.pdf) that browsers
+ * open/preview correctly and an admin can tell apart at a glance.
+ */
+export async function uploadRawFile(file: File, folder: "resumes"): Promise<string> {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_").slice(-100);
+  const publicId = `${Date.now()}-${safeName}`;
+  const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: `gfg-ikgptu/${folder}`,
+        resource_type: "raw",
+        public_id: publicId,
+      },
+      (error, uploaded) => {
+        if (error || !uploaded) reject(error ?? new Error("Cloudinary upload returned no result."));
+        else resolve(uploaded);
+      }
+    );
+    stream.end(bytes);
+  });
+  return result.secure_url;
+}
+
 /** Removes a previously-uploaded image given its Cloudinary URL.
  *  Silently does nothing for URLs that aren't ours (e.g. a leftover
  *  "/images/..." path from before this migration) — same fallback

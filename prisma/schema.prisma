@@ -34,6 +34,7 @@ model Member {
   credential     MemberCredential?
   changeRequests MemberChangeRequest[]
   otpRequests    OtpRequest[]
+  loginEvents    LoginEvent[]
 
   @@map("members")
 }
@@ -147,8 +148,27 @@ model JoinRequest {
   branch      String
   year        String
   message     String?
+  /** Cloudinary URL of an uploaded resume/CV, if the person attached
+   *  one — raw file upload (not an image), see lib/cloudinary.ts. */
+  resumeUrl   String?
   submittedAt DateTime @default(now())
   status      String   @default("new")
 
   @@map("join_requests")
+}
+
+// A record of each successful member login, powering the admin
+// dashboard's Activity tab (lib/content-store.ts's addLoginEvent /
+// getRecentLoginEvents). Auto-generated id, unlike most other models
+// here, since nothing ever needs to reference a specific login event
+// by a caller-supplied id — it's purely an append-only log.
+model LoginEvent {
+  id         String   @id @default(cuid())
+  memberId   String
+  memberName String
+  loggedInAt DateTime @default(now())
+  userAgent  String?
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("login_events")
 }

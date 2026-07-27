@@ -19,7 +19,7 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen bg-paper dark:bg-surface-dark">
-      <div className="border-b border-ink-900/10 bg-white dark:border-white/10 dark:bg-surface-darkRaised">
+      <div className="sticky top-0 z-40 border-b border-ink-900/10 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-surface-darkRaised/80">
         <div className="container flex items-center justify-between gap-3 py-5">
           <div className="flex min-w-0 items-center gap-2">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white">

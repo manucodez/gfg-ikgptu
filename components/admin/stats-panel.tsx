@@ -157,7 +157,7 @@ export function StatsPanel() {
                 type="button"
                 onClick={() => startEdit(stat)}
                 aria-label={`Edit ${stat.label}`}
-                className="rounded-full p-2 text-ink-500 hover:bg-ink-900/5 dark:text-white/50 dark:hover:bg-white/10"
+                className="rounded-full p-2.5 text-ink-500 hover:bg-ink-900/5 dark:text-white/50 dark:hover:bg-white/10"
               >
                 <Pencil className="h-4 w-4" />
               </button>
@@ -165,7 +165,7 @@ export function StatsPanel() {
                 type="button"
                 onClick={() => handleDelete(stat.id)}
                 aria-label={`Remove ${stat.label}`}
-                className="rounded-full p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                className="rounded-full p-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

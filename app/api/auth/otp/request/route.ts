@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { findMemberByEmail, createOtpRequest } from "@/lib/content-store";
 import { generateOtp, otpExpiryDate } from "@/lib/otp";
 import { hashPassword } from "@/lib/password";
-import { sendOtpEmail } from "@/lib/mailer";
+import { sendOtpEmail, MailerError } from "@/lib/mailer";
 
 // Every request must hit this handler fresh — GET routes with no
 // per-request API usage can otherwise get statically pre-rendered
@@ -40,7 +40,17 @@ export async function POST(request: Request) {
     attempts: 0,
   });
 
-  await sendOtpEmail(member.socials.email!, code);
+  try {
+    await sendOtpEmail(member.socials.email!, code);
+  } catch (err) {
+    if (err instanceof MailerError) {
+      return NextResponse.json(
+        { error: "Couldn't send that email right now — please try again in a moment." },
+        { status: 502 }
+      );
+    }
+    throw err;
+  }
 
   return NextResponse.json({ ok: true });
 }

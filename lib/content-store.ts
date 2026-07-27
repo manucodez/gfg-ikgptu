@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { uploadImage, deleteImage } from "@/lib/cloudinary";
+import { uploadImage, deleteImage, uploadRawFile } from "@/lib/cloudinary";
 import type {
   Member,
   ChapterEvent,
@@ -13,6 +13,7 @@ import type {
   StatItem,
   JoinRequest,
   JoinRequestStatus,
+  LoginEvent,
 } from "@/lib/types";
 import { parseDateValue } from "@/lib/utils";
 
@@ -726,6 +727,7 @@ function toJoinRequest(row: {
   branch: string;
   year: string;
   message: string | null;
+  resumeUrl: string | null;
   submittedAt: Date;
   status: string;
 }): JoinRequest {
@@ -736,6 +738,7 @@ function toJoinRequest(row: {
     branch: row.branch,
     year: row.year,
     message: row.message ?? undefined,
+    resumeUrl: row.resumeUrl ?? undefined,
     submittedAt: row.submittedAt.toISOString(),
     status: row.status as JoinRequestStatus,
   };
@@ -756,6 +759,7 @@ export async function addJoinRequest(request: JoinRequest): Promise<void> {
       branch: request.branch,
       year: request.year,
       message: request.message ?? null,
+      resumeUrl: request.resumeUrl ?? null,
       submittedAt: new Date(request.submittedAt),
       status: request.status,
     },
@@ -776,4 +780,60 @@ export async function updateJoinRequestStatus(
 
 export async function deleteJoinRequest(id: string): Promise<void> {
   await prisma.joinRequest.delete({ where: { id } }).catch(() => {});
+}
+
+// --- Login activity (admin "Activity" tab) --------------------------
+
+function toLoginEvent(row: {
+  id: string;
+  memberId: string;
+  memberName: string;
+  loggedInAt: Date;
+  userAgent: string | null;
+}): LoginEvent {
+  return {
+    id: row.id,
+    memberId: row.memberId,
+    memberName: row.memberName,
+    loggedInAt: row.loggedInAt.toISOString(),
+    userAgent: row.userAgent ?? undefined,
+  };
+}
+
+/** Records a successful member login. Called from
+ *  app/api/auth/login/route.ts right after a password check passes —
+ *  never for failed attempts, and never for admin logins (there's
+ *  only ever one or two admins, so an admin watching their own login
+ *  history isn't useful the way seeing member activity is). */
+export async function addLoginEvent(
+  memberId: string,
+  memberName: string,
+  userAgent?: string
+): Promise<void> {
+  await prisma.loginEvent.create({
+    data: { memberId, memberName, userAgent: userAgent ?? null },
+  });
+}
+
+/** Most recent logins, newest first, for the admin dashboard's
+ *  Activity tab. That tab polls this on an interval to feel live —
+ *  see components/admin/login-activity-panel.tsx. */
+export async function getRecentLoginEvents(limit = 100): Promise<LoginEvent[]> {
+  const rows = await prisma.loginEvent.findMany({
+    orderBy: { loggedInAt: "desc" },
+    take: limit,
+  });
+  return rows.map(toLoginEvent);
+}
+
+// --- Resume/CV uploads (public "Join" form) --------------------------
+
+/**
+ * Uploads a resume/CV to Cloudinary as a raw file (not an image —
+ * PDFs and Word docs go through a different Cloudinary resource type
+ * than photos) and returns its public HTTPS URL to store on the join
+ * request. See saveUploadedImage above for the equivalent for photos.
+ */
+export async function saveUploadedResume(file: File): Promise<string> {
+  return uploadRawFile(file, "resumes");
 }

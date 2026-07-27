@@ -7,6 +7,7 @@ import { EventsPanel } from "@/components/admin/events-panel";
 import { GalleryPanel } from "@/components/admin/gallery-panel";
 import { RequestsPanel } from "@/components/admin/requests-panel";
 import { JoinRequestsPanel } from "@/components/admin/join-requests-panel";
+import { LoginActivityPanel } from "@/components/admin/login-activity-panel";
 import { StatsPanel } from "@/components/admin/stats-panel";
 import { AchievementsPanel } from "@/components/admin/achievements-panel";
 
@@ -39,6 +40,7 @@ export function AdminDashboard() {
             </span>
           )}
         </TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
         <TabsTrigger value="members">Members</TabsTrigger>
         <TabsTrigger value="events">Events</TabsTrigger>
         <TabsTrigger value="gallery">Gallery</TabsTrigger>
@@ -51,6 +53,9 @@ export function AdminDashboard() {
       </TabsContent>
       <TabsContent value="join-requests" className="mt-6">
         <JoinRequestsPanel onNewCountChange={setNewJoinCount} />
+      </TabsContent>
+      <TabsContent value="activity" className="mt-6">
+        <LoginActivityPanel />
       </TabsContent>
       <TabsContent value="members" className="mt-6">
         <MembersPanel />

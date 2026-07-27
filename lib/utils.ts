@@ -72,6 +72,52 @@ export function formatDisplayDate(date: string): string {
   });
 }
 
+/** "just now" / "5m ago" / "3h ago" / "2d ago" for a timestamp within
+ *  the last week, falling back to formatDisplayDate beyond that —
+ *  used for the admin dashboard's login-activity feed, where relative
+ *  time reads as more "live" than an absolute timestamp would. */
+export function formatRelativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return iso;
+  const diffSeconds = Math.round((Date.now() - then) / 1000);
+  if (diffSeconds < 30) return "just now";
+  if (diffSeconds < 60) return `${diffSeconds}s ago`;
+  const diffMinutes = Math.round(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return formatDisplayDate(iso);
+}
+
+/** Turns a raw User-Agent string into something a human actually
+ *  wants to read, e.g. "Chrome on iPhone" instead of the full UA
+ *  blob — used for the admin dashboard's login-activity feed. This is
+ *  a best-effort summary (a few common cases), not a full UA parser. */
+export function summarizeUserAgent(ua?: string): string {
+  if (!ua) return "Unknown device";
+
+  let device = "Computer";
+  if (/iPhone/i.test(ua)) device = "iPhone";
+  else if (/iPad/i.test(ua)) device = "iPad";
+  else if (/Android/i.test(ua)) device = /Mobile/i.test(ua) ? "Android phone" : "Android tablet";
+  else if (/Macintosh/i.test(ua)) device = "Mac";
+  else if (/Windows/i.test(ua)) device = "Windows PC";
+  else if (/Linux/i.test(ua)) device = "Linux";
+
+  let browser = "";
+  if (/Edg\//i.test(ua)) browser = "Edge";
+  else if (/OPR\//i.test(ua)) browser = "Opera";
+  else if (/Chrome\//i.test(ua)) browser = "Chrome";
+  else if (/CriOS\//i.test(ua)) browser = "Chrome";
+  else if (/FxiOS\//i.test(ua)) browser = "Firefox";
+  else if (/Firefox\//i.test(ua)) browser = "Firefox";
+  else if (/Safari\//i.test(ua)) browser = "Safari";
+
+  return browser ? `${browser} on ${device}` : device;
+}
+
 const MONTH_ABBRS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** Formats a single `YYYY-MM-DD` picker value or a start/end pair into

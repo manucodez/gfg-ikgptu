@@ -110,44 +110,78 @@ vercel
 ```
 
 Set the same environment variables from `.env.local` (`AUTH_SECRET`,
-`ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH_B64`, `DATABASE_URL`, and the three
-`CLOUDINARY_*` keys) in your host's project settings — `.env.local` is
-gitignored and never deploys with your code. Run `npx prisma migrate deploy`
-(not `migrate dev`) against your production `DATABASE_URL` before the first
-deploy, and `npm run db:seed` once if you're carrying over existing content.
+`ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH_B64`, `DATABASE_URL`, the three
+`CLOUDINARY_*` keys, and `RESEND_API_KEY`/`RESEND_FROM_EMAIL`) in your
+host's project settings — `.env.local` is gitignored and never deploys
+with your code. Run `npx prisma migrate deploy` (not `migrate dev`)
+against your production `DATABASE_URL` before the first deploy, and
+`npm run db:seed` once if you're carrying over existing content.
 
-## Sending real OTP emails
+## Sending OTP emails (Resend)
 
 The "forgot / set password" flow (`/reset-password`) generates a real,
-short-lived, single-use 6-digit code and checks it correctly — but
-`lib/mailer.ts` currently just logs it to the server console instead of
-emailing it, since no email provider is configured. That's fine for local
-testing but obviously not for real members. To fix it:
+short-lived, single-use 6-digit code and checks it correctly, and
+`lib/mailer.ts` sends it for real via [Resend](https://resend.com):
 
-1. Pick a provider. **[Resend](https://resend.com)** is the easiest for a
-   Next.js project (generous free tier, a few lines of SDK code, good
-   deliverability without fighting spam filters). Nodemailer + your own
-   SMTP (e.g. a Gmail app password) also works if you'd rather not add a
-   third-party account.
-2. Add the API key to `.env.local` (e.g. `RESEND_API_KEY=...`).
-3. Replace the body of `sendOtpEmail` in `lib/mailer.ts`:
+1. Sign up at resend.com (free tier), create an API key, put it in
+   `.env.local` as `RESEND_API_KEY`.
+2. Verify a domain at resend.com/domains (a few DNS records, takes a
+   little while to propagate). Until you do, Resend only lets you send
+   from `onboarding@resend.dev` — fine for testing, not a real launch.
+3. Once verified, set `RESEND_FROM_EMAIL` to an address on that domain,
+   e.g. `GFG Campus Chapter <noreply@your-domain.org>`.
 
-```ts
-import { Resend } from "resend";
-const resend = new Resend(process.env.RESEND_API_KEY);
+Without `RESEND_API_KEY` set at all, `sendOtpEmail` falls back to
+printing the code to the server console instead of sending anything —
+so local dev keeps working without every contributor needing a Resend
+account. If Resend *is* configured but a send genuinely fails (bad
+domain, rate limit, etc.), the person requesting the code sees a real
+error instead of the app claiming success and the email never arriving
+— see `MailerError` in `lib/mailer.ts` and how
+`app/api/auth/otp/request/route.ts` catches it.
 
-export async function sendOtpEmail(email: string, code: string): Promise<void> {
-  await resend.emails.send({
-    from: "GFG Campus Chapter <noreply@your-domain.com>",
-    to: email,
-    subject: "Your verification code",
-    html: `<p>Your code is <strong>${code}</strong>. It expires in 10 minutes.</p>`,
-  });
-}
-```
+## The resume upload on the "Join" form
 
-Nothing else needs to change — `app/api/auth/otp/request/route.ts` already
-calls `sendOtpEmail` and doesn't care how it's implemented.
+The join form's optional resume/CV field uploads to Cloudinary as a
+**raw** file (`lib/cloudinary.ts`'s `uploadRawFile` — Cloudinary treats
+PDFs/Word docs as a different resource type than photos, so this is a
+separate function from the image uploader). `POST /api/join` validates
+the file server-side (PDF/DOC/DOCX only, 5MB max) regardless of what
+the browser's file picker already filtered, and stores the resulting
+URL on the `join_requests` row as `resumeUrl`. An admin sees a "View
+resume" link on any submission that included one, from the **Join
+Requests** tab.
+
+## Login activity (admin "Activity" tab)
+
+Every successful *member* login (not admin logins — with only one or
+two admins, an admin watching their own login history isn't useful the
+way seeing member activity is; and not failed attempts, just
+successful ones) gets recorded via `addLoginEvent` in
+`lib/content-store.ts`, called from `app/api/auth/login/route.ts`
+right after the password check passes. The admin dashboard's
+**Activity** tab (`components/admin/login-activity-panel.tsx`) polls
+`GET /api/admin/login-events` every 10 seconds and shows the most
+recent 100, newest first, with a relative timestamp ("2m ago") and a
+best-effort device summary parsed from the User-Agent header (e.g.
+"Chrome on iPhone").
+
+This is polling, not a true real-time push (WebSockets/Server-Sent
+Events) — a deliberate tradeoff given the app runs on serverless hosts
+(Vercel/Netlify), where a persistent connection per admin dashboard tab
+isn't something the platform is built for without extra infrastructure
+(a separate WebSocket service, a provider like Pusher/Ably, etc.).
+Every 10 seconds is close enough to "real time" for "did someone just
+log in" without that added complexity — newly-arrived entries briefly
+highlight so a fresh login is easy to notice even without watching the
+tab closely.
+
+Deliberately **not** tracked: IP address (privacy — a member's device
+type is useful context, their precise location isn't information this
+app needs to hold onto) and failed login attempts (that's a security
+monitoring feature, a different concern from "who's using their
+account," and would need its own thinking about rate-limiting/lockout
+before being worth adding).
 
 ## How the database layer is put together
 
