@@ -23,7 +23,7 @@ const COLUMN_BREAKPOINTS = [
   { minWidth: 1024, columns: 5 },
   { minWidth: 768, columns: 4 },
   { minWidth: 480, columns: 3 },
-  { minWidth: 0, columns: 2 },
+  { minWidth: 0, columns: 3 },
 ];
 
 function useHoneycombColumns() {
