@@ -111,34 +111,50 @@ vercel
 
 Set the same environment variables from `.env.local` (`AUTH_SECRET`,
 `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH_B64`, `DATABASE_URL`, the three
-`CLOUDINARY_*` keys, and `RESEND_API_KEY`/`RESEND_FROM_EMAIL`) in your
+`CLOUDINARY_*` keys, and `GMAIL_USER`/`GMAIL_APP_PASSWORD`) in your
 host's project settings — `.env.local` is gitignored and never deploys
 with your code. Run `npx prisma migrate deploy` (not `migrate dev`)
 against your production `DATABASE_URL` before the first deploy, and
 `npm run db:seed` once if you're carrying over existing content.
 
-## Sending OTP emails (Resend)
+## Sending OTP emails (Gmail SMTP)
 
 The "forgot / set password" flow (`/reset-password`) generates a real,
 short-lived, single-use 6-digit code and checks it correctly, and
-`lib/mailer.ts` sends it for real via [Resend](https://resend.com):
+`lib/mailer.ts` sends it for real via Gmail's SMTP server (using
+[nodemailer](https://nodemailer.com), the standard Node email library):
 
-1. Sign up at resend.com (free tier), create an API key, put it in
-   `.env.local` as `RESEND_API_KEY`.
-2. Verify a domain at resend.com/domains (a few DNS records, takes a
-   little while to propagate). Until you do, Resend only lets you send
-   from `onboarding@resend.dev` — fine for testing, not a real launch.
-3. Once verified, set `RESEND_FROM_EMAIL` to an address on that domain,
-   e.g. `GFG Campus Chapter <noreply@your-domain.org>`.
+1. Turn on 2-Step Verification for the Gmail account you want to send
+   from, at myaccount.google.com/security. This is required — Gmail's
+   SMTP server rejects your regular account password even if you skip
+   this step, it just fails with an auth error.
+2. Generate an App Password at myaccount.google.com/apppasswords
+   (choose "Mail" as the app it's for). Google gives you a 16-character
+   password — put it in `.env.local` as `GMAIL_APP_PASSWORD`.
+3. Set `GMAIL_USER` to that Gmail address itself.
 
-Without `RESEND_API_KEY` set at all, `sendOtpEmail` falls back to
-printing the code to the server console instead of sending anything —
-so local dev keeps working without every contributor needing a Resend
-account. If Resend *is* configured but a send genuinely fails (bad
-domain, rate limit, etc.), the person requesting the code sees a real
-error instead of the app claiming success and the email never arriving
-— see `MailerError` in `lib/mailer.ts` and how
-`app/api/auth/otp/request/route.ts` catches it.
+Without both set, `sendOtpEmail` falls back to printing the code to
+the server console instead of sending anything — so local dev keeps
+working without every contributor needing their own Gmail app
+password. If Gmail *is* configured but a send genuinely fails (wrong
+app password, hitting Gmail's daily sending limit, etc.), the person
+requesting the code sees a real error instead of the app claiming
+success and the email never arriving — see `MailerError` in
+`lib/mailer.ts` and how `app/api/auth/otp/request/route.ts` catches it.
+
+Two things worth knowing about this specific choice, honestly:
+- **Sending limit**: a regular Gmail account tops out at 500 emails/day
+  (2,000/day on Google Workspace). Fine for a chapter site's OTP
+  volume; worth revisiting if the chapter ever gets large enough that
+  it's a real constraint.
+- **Deliverability**: mail sent from a personal Gmail address through
+  SMTP is more likely to land in spam than mail from a dedicated
+  transactional provider (Resend, Postmark, SES) sending through a
+  domain with proper SPF/DKIM records. If that becomes a real problem,
+  swapping providers only means rewriting the inside of
+  `sendOtpEmail` in `lib/mailer.ts` — the function's signature
+  (`sendOtpEmail(email, code)`) and everywhere it's called stay exactly
+  the same.
 
 ## The resume upload on the "Join" form
 

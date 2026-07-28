@@ -28,7 +28,14 @@ export function EventsSection({ events }: EventsSectionProps) {
     const id = new URLSearchParams(window.location.search).get("event");
     if (!id) return;
     const match = events.find((e) => e.id === id);
-    if (match) setSelected(match);
+    if (!match) return;
+    setSelected(match);
+    // Explicit rather than relying on the URL's #events hash to jump
+    // there natively — keeps this smooth without needing site-wide
+    // smooth-scroll CSS (which was also making unrelated things, like
+    // the browser restoring scroll position on a plain reload, animate
+    // when they shouldn't).
+    document.getElementById("events")?.scrollIntoView({ behavior: "smooth" });
     // Only meant to run once, against whatever the URL looked like on
     // first load — not on every events/filter change afterward.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -4,6 +4,10 @@ import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@/lib/utils";
 
+/** Merges a locally-owned ref with a forwarded one — needed because
+ *  TabsTrigger both forwards its ref (for API compatibility) and
+ *  needs its own access to the DOM node (to keep itself scrolled
+ *  into view within the tab strip). */
 function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   return (node: T | null) => {
     refs.forEach((ref) => {
@@ -15,6 +19,17 @@ function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
 }
 
 export const Tabs = TabsPrimitive.Root;
+
+// Shares the tab strip's own horizontally-scrolling container with
+// TabsTrigger below, so an active tab can be scrolled into view
+// WITHIN that strip specifically. Deliberately not using the DOM's
+// built-in element.scrollIntoView() for this: it scrolls every
+// scrollable ancestor needed to reveal the element — including the
+// whole page, if the tab strip happens to be off-screen at the time
+// (e.g. a filter tab further down a long homepage, not yet scrolled
+// to). That's what used to yank the page down to the Events section
+// on every visit, since its "All" filter tab is active by default.
+const TabsScrollContext = React.createContext<React.RefObject<HTMLDivElement> | null>(null);
 
 export function TabsList({
   className,
@@ -31,9 +46,7 @@ export function TabsList({
     if (!el) return;
 
     setShowLeftFade(el.scrollLeft > 2);
-    setShowRightFade(
-      el.scrollLeft + el.clientWidth < el.scrollWidth - 2
-    );
+    setShowRightFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
   }, []);
 
   React.useEffect(() => {
@@ -54,38 +67,37 @@ export function TabsList({
   }, [updateFades]);
 
   return (
-    <div className="relative w-full">
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto scrollbar-hide px-4"
-      >
-        <TabsPrimitive.List
+    <TabsScrollContext.Provider value={scrollRef}>
+      <div className="relative w-full">
+        <div ref={scrollRef} className="overflow-x-auto scrollbar-hide px-4">
+          <TabsPrimitive.List
+            className={cn(
+              "inline-flex w-max min-w-max items-center gap-1 rounded-full bg-ink-900/5 p-1 dark:bg-white/10",
+              className
+            )}
+            {...props}
+          >
+            {children}
+          </TabsPrimitive.List>
+        </div>
+
+        <div
+          aria-hidden
           className={cn(
-            "inline-flex w-max min-w-max items-center gap-1 rounded-full bg-ink-900/5 p-1 dark:bg-white/10",
-            className
+            "pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-paper to-transparent transition-opacity dark:from-surface-dark",
+            showLeftFade ? "opacity-100" : "opacity-0"
           )}
-          {...props}
-        >
-          {children}
-        </TabsPrimitive.List>
+        />
+
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-paper to-transparent transition-opacity dark:from-surface-dark",
+            showRightFade ? "opacity-100" : "opacity-0"
+          )}
+        />
       </div>
-
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-paper to-transparent transition-opacity dark:from-surface-dark",
-          showLeftFade ? "opacity-100" : "opacity-0"
-        )}
-      />
-
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-paper to-transparent transition-opacity dark:from-surface-dark",
-          showRightFade ? "opacity-100" : "opacity-0"
-        )}
-      />
-    </div>
+    </TabsScrollContext.Provider>
   );
 }
 
@@ -94,18 +106,26 @@ export const TabsTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, ...props }, forwardedRef) => {
   const innerRef = React.useRef<HTMLButtonElement>(null);
+  const scrollContainerRef = React.useContext(TabsScrollContext);
 
   React.useEffect(() => {
-    const el = innerRef.current;
+    const trigger = innerRef.current;
+    const container = scrollContainerRef?.current;
+    if (!trigger || !container) return;
+    if (trigger.getAttribute("data-state") !== "active") return;
 
-    if (!el) return;
+    // Bounding rects are viewport-relative regardless of page scroll
+    // position, so this comparison — and the scrollBy call below —
+    // never touches the page's own scroll, only the strip's.
+    const containerRect = container.getBoundingClientRect();
+    const triggerRect = trigger.getBoundingClientRect();
+    const overflowLeft = containerRect.left - triggerRect.left;
+    const overflowRight = triggerRect.right - containerRect.right;
 
-    if (el.dataset.state === "active") {
-      el.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-        block: "nearest",
-      });
+    if (overflowLeft > 0) {
+      container.scrollBy({ left: -overflowLeft - 16, behavior: "smooth" });
+    } else if (overflowRight > 0) {
+      container.scrollBy({ left: overflowRight + 16, behavior: "smooth" });
     }
   });
 

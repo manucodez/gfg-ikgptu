@@ -120,9 +120,7 @@ export default function ResetPasswordPage() {
                 placeholder="123456"
               />
               <p className="mt-1.5 text-xs text-ink-500 dark:text-white/40">
-                <p className="mt-3 text-xs text-amber-400">
-              OTP-based password reset is currently unavailable. This feature will be available soon. Please contact the chapter administrator if you need to reset your password.
-              </p>
+                Sent to {email}. Codes expire after 10 minutes.
               </p>
             </div>
             <div>
