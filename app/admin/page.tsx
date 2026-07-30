@@ -39,7 +39,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div className="container max-w-4xl py-10">
+      <div className="mx-auto w-full max-w-4xl px-4 py-10">
         <AdminDashboard />
       </div>
     </main>

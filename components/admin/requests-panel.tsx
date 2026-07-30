@@ -172,11 +172,11 @@ export function RequestsPanel({ onPendingCountChange }: RequestsPanelProps = {})
                             </dd>
                           ) : (
                             <dd className="mt-0.5">
-                              <span className="text-ink-500 line-through dark:text-white/40">
+                              <span className="break-all text-ink-500 line-through dark:text-white/40">
                                 {formatValue(field, req.previous[field])}
                               </span>
                               {" → "}
-                              <span className="font-medium">{formatValue(field, req.changes[field])}</span>
+                              <span className="break-all font-medium">{formatValue(field, req.changes[field])}</span>
                             </dd>
                           )}
                         </div>

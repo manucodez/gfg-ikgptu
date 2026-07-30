@@ -92,12 +92,12 @@ export function JoinRequestsPanel({ onNewCountChange }: JoinRequestsPanelProps =
               </p>
               <a
                 href={`mailto:${r.email}`}
-                className="mt-1 inline-flex items-center gap-1.5 text-sm text-brand-700 hover:underline dark:text-brand-400"
+                className="mt-1 inline-flex max-w-full items-center gap-1.5 break-all text-sm text-brand-700 hover:underline dark:text-brand-400"
               >
                 <Mail className="h-3.5 w-3.5" /> {r.email}
               </a>
               {r.message && (
-                <p className="mt-2 max-w-2xl text-sm text-ink-700 dark:text-white/70">{r.message}</p>
+                <p className="mt-2 max-w-2xl break-words text-sm text-ink-700 dark:text-white/70">{r.message}</p>
               )}
               {r.resumeUrl && (
                 <a
