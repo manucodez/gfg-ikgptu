@@ -25,7 +25,7 @@ export function Navbar({ loggedInMember }: NavbarProps) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-900/10 bg-paper/80 backdrop-blur-md dark:border-white/10 dark:bg-surface-dark/80">
+    <header className="sticky top-0 z-40 border-b border-ink-900/10 bg-paper dark:border-white/10 dark:bg-surface-dark">
       <div className="container flex h-16 items-center justify-between">
         <Link href="#home" className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
