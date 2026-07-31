@@ -299,6 +299,11 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
   return rows.map(toGalleryItem);
 }
 
+export async function getGalleryItemById(id: string): Promise<GalleryItem | null> {
+  const row = await prisma.galleryItem.findUnique({ where: { id } });
+  return row ? toGalleryItem(row) : null;
+}
+
 export async function saveGalleryItems(items: GalleryItem[]): Promise<void> {
   await prisma.$transaction(
     items.map((g) => {

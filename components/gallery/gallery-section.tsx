@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SectionHeading } from "@/components/section-heading";
 import { GalleryCarousel } from "@/components/gallery/gallery-carousel";
 import { GalleryGrid } from "@/components/gallery/gallery-grid";
+import { GalleryLightbox } from "@/components/gallery/gallery-lightbox";
 import { GalleryItem } from "@/lib/types";
 
 interface GallerySectionProps {
@@ -12,6 +13,8 @@ interface GallerySectionProps {
 
 export function GallerySection({ galleryItems }: GallerySectionProps) {
   const [active, setActive] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const activeIndex = Math.min(active, galleryItems.length - 1);
 
   return (
     <section id="gallery" className="section-pad">
@@ -27,13 +30,17 @@ export function GallerySection({ galleryItems }: GallerySectionProps) {
             <>
               <GalleryCarousel
                 items={galleryItems}
-                active={Math.min(active, galleryItems.length - 1)}
+                active={activeIndex}
                 onActiveChange={setActive}
+                onExpand={() => setLightboxOpen(true)}
               />
-              <GalleryGrid
+              <GalleryGrid items={galleryItems} active={activeIndex} onSelect={setActive} />
+              <GalleryLightbox
                 items={galleryItems}
-                active={Math.min(active, galleryItems.length - 1)}
-                onSelect={setActive}
+                active={activeIndex}
+                onActiveChange={setActive}
+                open={lightboxOpen}
+                onOpenChange={setLightboxOpen}
               />
             </>
           ) : (

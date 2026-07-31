@@ -65,15 +65,18 @@ export function GalleryPanel() {
     setEditError(null);
   }
 
-  async function handleSaveEdit(e: React.FormEvent) {
+  async function handleSaveEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!editingId) return;
     setEditLoading(true);
     setEditError(null);
+    const formData = new FormData(e.currentTarget);
+    // caption/category/description are always present (controlled
+    // inputs with name= attributes below); imageFile is only included
+    // if a replacement was actually picked.
     const res = await fetch(`/api/admin/gallery/${editingId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editDraft),
+      body: formData,
     });
     if (res.ok) {
       setEditingId(null);
@@ -158,6 +161,7 @@ export function GalleryPanel() {
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">Caption</span>
               <Input
+                name="caption"
                 value={editDraft.caption}
                 onChange={(e) => setEditDraft({ ...editDraft, caption: e.target.value })}
                 required
@@ -166,6 +170,7 @@ export function GalleryPanel() {
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">Category</span>
               <Input
+                name="category"
                 value={editDraft.category}
                 onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })}
                 required
@@ -175,11 +180,26 @@ export function GalleryPanel() {
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium">Description (optional)</span>
             <Textarea
+              name="description"
               value={editDraft.description}
               onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
               rows={2}
               placeholder="A line or two of context for this photo — who, what, when."
             />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-medium">
+              Replace photo <span className="font-normal text-ink-500 dark:text-white/40">(optional)</span>
+            </span>
+            <input
+              type="file"
+              name="imageFile"
+              accept="image/*"
+              className="block w-full text-sm text-ink-500 file:mr-3 file:rounded-full file:border-0 file:bg-brand-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700 dark:text-white/50 dark:file:bg-brand-900/40 dark:file:text-brand-400"
+            />
+            <p className="mt-1 text-xs text-ink-500 dark:text-white/40">
+              Leave empty to keep the current photo.
+            </p>
           </label>
 
           {editError && (
