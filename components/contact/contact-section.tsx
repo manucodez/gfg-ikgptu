@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaWhatsapp, Instagram, Linkedin, Send, CheckCircle2 } from "lucide-react";
+import { FaWhatsapp, FaInstagram, FaLinkedin, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { SectionHeading } from "@/components/section-heading";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 
 const SOCIALS = [
   { icon: FaWhatsapp, label: "WhatsApp", href: "https://chat.whatsapp.com/FOkUp3cUuLkFWKqOY1vXLk" },
-  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/company/geeks-for-geeks-ikgptu/" },
-  { icon: Instagram, label: "Instagram", href: "https://instagram.com/geeksforgeeksikgptu" },
+  { icon: FaLinkedin, label: "LinkedIn", href: "https://www.linkedin.com/company/geeks-for-geeks-ikgptu/" },
+  { icon: FaInstagram, label: "Instagram", href: "https://instagram.com/geeksforgeeksikgptu" },
 ];
 
 export function ContactSection() {
@@ -85,7 +85,7 @@ export function ContactSection() {
         <div className="card-surface p-6 sm:p-8">
           {submitted ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
-              <CheckCircle2 className="h-9 w-9 text-brand-600 dark:text-brand-400" />
+              <FaCheckCircle className="h-9 w-9 text-brand-600 dark:text-brand-400" />
               <p className="font-display text-lg font-medium">Request received</p>
               <p className="max-w-xs text-sm text-ink-500 dark:text-white/60">
                 A core team member will follow up over email within a few days.
@@ -125,7 +125,7 @@ export function ContactSection() {
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Sending..." : "Submit"} <Send className="h-4 w-4" />
+                {submitting ? "Sending..." : "Submit"} <FaPaperPlane className="h-4 w-4" />
               </Button>
             </form>
           )}
