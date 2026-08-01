@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 const SOCIALS = [
   { icon: Github, label: "GitHub", href: "https://github.com/" },
   { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com/" },
-  { icon: Instagram, label: "Instagram", href: "https://instagram.com/" },
+  { icon: Instagram, label: "Instagram", href: "https://instagram.com/geeksforgeeksikgptu" },
 ];
 
 export function ContactSection() {
