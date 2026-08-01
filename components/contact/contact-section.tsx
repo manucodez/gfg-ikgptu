@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Github, Instagram, Linkedin, Send, CheckCircle2 } from "lucide-react";
+import { MessageCircle, Instagram, Linkedin, Send, CheckCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/section-heading";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 const SOCIALS = [
-  { icon: WhatsApp, label: "WhatsApp", href: "https://chat.whatsapp.com/FOkUp3cUuLkFWKqOY1vXLk" },
+  { icon: MessageCircle, label: "WhatsApp", href: "https://chat.whatsapp.com/FOkUp3cUuLkFWKqOY1vXLk" },
   { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com/company/geeks-for-geeks-ikgptu" },
   { icon: Instagram, label: "Instagram", href: "https://instagram.com/geeksforgeeksikgptu" },
 ];
