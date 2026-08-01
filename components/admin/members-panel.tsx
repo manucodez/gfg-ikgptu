@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Maximize2, KeyRound } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Plus, Pencil, Trash2, Maximize2, KeyRound, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Avatar } from "@/components/members/avatar";
 import { MemberForm } from "@/components/admin/member-form";
+import { cn } from "@/lib/utils";
 import { Member } from "@/lib/types";
 
 interface CredentialStatus {
@@ -19,6 +31,18 @@ export function MembersPanel() {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingAvatarOf, setViewingAvatarOf] = useState<Member | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
+  // PointerSensor covers mouse/trackpad with a small move-distance
+  // threshold (so a plain click on the handle doesn't register as a
+  // drag). TouchSensor is configured separately with a short
+  // press-and-hold delay instead — the standard way to let a touch
+  // scroll gesture and a drag gesture coexist on the same element
+  // without one accidentally triggering the other.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } })
+  );
 
   async function load() {
     const [membersRes, credentialsRes] = await Promise.all([
@@ -39,18 +63,50 @@ export function MembersPanel() {
     load();
   }
 
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!members || !over || active.id === over.id) return;
+
+    const oldIndex = members.findIndex((m) => m.id === active.id);
+    const newIndex = members.findIndex((m) => m.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Optimistic update — reorder locally immediately so dragging
+    // feels instant, then persist; roll back by reloading from the
+    // server if the save actually fails.
+    const reordered = arrayMove(members, oldIndex, newIndex);
+    setMembers(reordered);
+
+    setSavingOrder(true);
+    const res = await fetch("/api/admin/members/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedIds: reordered.map((m) => m.id) }),
+    });
+    setSavingOrder(false);
+    if (!res.ok) load();
+  }
+
   if (!members) return <p className="text-sm text-ink-500 dark:text-white/50">Loading members...</p>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-ink-500 dark:text-white/50">{members.length} members</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-500 dark:text-white/50">
+          {members.length} members
+          {savingOrder && <span className="ml-2 text-brand-600 dark:text-brand-400">Saving order...</span>}
+        </p>
         {!adding && (
           <Button size="sm" onClick={() => setAdding(true)}>
             <Plus className="h-4 w-4" /> Add member
           </Button>
         )}
       </div>
+
+      <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-white/40">
+        <GripVertical className="h-3.5 w-3.5 shrink-0" />
+        Drag the handle on any member to change the order they appear in on the site.
+      </p>
 
       {adding && (
         <MemberForm
@@ -62,71 +118,37 @@ export function MembersPanel() {
         />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {members.map((member) => {
-          const credential = credentialStatuses[member.id];
-          return editingId === member.id ? (
-            <div key={member.id} className="sm:col-span-2">
-              <MemberForm
-                initial={member}
-                credential={credential}
-                onDone={() => {
-                  setEditingId(null);
-                  load();
-                }}
-                onCancel={() => setEditingId(null)}
-              />
-            </div>
-          ) : (
-            <div
-              key={member.id}
-              className="flex items-center gap-3 rounded-2xl border border-ink-900/10 p-4 dark:border-white/10"
-            >
-              <button
-                type="button"
-                onClick={() => member.avatar && setViewingAvatarOf(member)}
-                aria-label={member.avatar ? `View ${member.name}'s photo` : `${member.name} has no photo`}
-                className={member.avatar ? "group relative shrink-0 rounded-full" : "shrink-0 cursor-default"}
-              >
-                <Avatar name={member.name} avatar={member.avatar} size={44} />
-                {member.avatar && (
-                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-ink-900/0 text-white opacity-0 transition-all group-hover:bg-ink-900/40 group-hover:opacity-100">
-                    <Maximize2 className="h-3.5 w-3.5" />
-                  </span>
-                )}
-              </button>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{member.name}</p>
-                <p className="truncate text-xs text-ink-500 dark:text-white/50">
-                  {member.role} · {member.team}
-                </p>
-                <p className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-500 dark:text-white/40">
-                  <KeyRound className="h-3 w-3" />
-                  {credential?.hasPassword
-                    ? `Password set · ${new Date(credential.passwordUpdatedAt).toLocaleDateString()}`
-                    : "No password set yet"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingId(member.id)}
-                aria-label={`Edit ${member.name}`}
-                className="rounded-full p-2.5 text-ink-500 hover:bg-ink-900/5 dark:text-white/50 dark:hover:bg-white/10"
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(member.id)}
-                aria-label={`Remove ${member.name}`}
-                className="rounded-full p-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          );
-        })}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={members.map((m) => m.id)} strategy={rectSortingStrategy}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {members.map((member) => {
+              const credential = credentialStatuses[member.id];
+              return editingId === member.id ? (
+                <div key={member.id} className="sm:col-span-2">
+                  <MemberForm
+                    initial={member}
+                    credential={credential}
+                    onDone={() => {
+                      setEditingId(null);
+                      load();
+                    }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                </div>
+              ) : (
+                <SortableMemberRow
+                  key={member.id}
+                  member={member}
+                  credential={credential}
+                  onEdit={() => setEditingId(member.id)}
+                  onDelete={() => handleDelete(member.id)}
+                  onViewAvatar={() => member.avatar && setViewingAvatarOf(member)}
+                />
+              );
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <Dialog open={!!viewingAvatarOf} onOpenChange={(open) => !open && setViewingAvatarOf(null)}>
         {viewingAvatarOf && (
@@ -136,12 +158,96 @@ export function MembersPanel() {
                 {viewingAvatarOf.name}&apos;s photo
               </DialogTitle>
               <div className="mt-4 flex justify-center">
-                <Avatar name={viewingAvatarOf.name} avatar={viewingAvatarOf.avatar} size={260} className="shadow-raised" />
+                <Avatar
+                  name={viewingAvatarOf.name}
+                  avatar={viewingAvatarOf.avatar}
+                  size={260}
+                  className="shadow-raised"
+                />
               </div>
             </div>
           </DialogContent>
         )}
       </Dialog>
+    </div>
+  );
+}
+
+interface SortableMemberRowProps {
+  member: Member;
+  credential?: CredentialStatus;
+  onEdit: () => void;
+  onDelete: () => void;
+  onViewAvatar: () => void;
+}
+
+function SortableMemberRow({ member, credential, onEdit, onDelete, onViewAvatar }: SortableMemberRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: member.id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(
+        "flex items-center gap-2 rounded-2xl border border-ink-900/10 bg-white p-4 dark:border-white/10 dark:bg-surface-darkRaised",
+        isDragging && "relative z-10 opacity-60 shadow-raised"
+      )}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label={`Drag to reorder ${member.name}`}
+        className="shrink-0 touch-none cursor-grab rounded-lg p-1.5 text-ink-400 hover:bg-ink-900/5 active:cursor-grabbing dark:text-white/30 dark:hover:bg-white/10"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+
+      <button
+        type="button"
+        onClick={onViewAvatar}
+        aria-label={member.avatar ? `View ${member.name}'s photo` : `${member.name} has no photo`}
+        className={member.avatar ? "group relative shrink-0 rounded-full" : "shrink-0 cursor-default"}
+      >
+        <Avatar name={member.name} avatar={member.avatar} size={44} />
+        {member.avatar && (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-ink-900/0 text-white opacity-0 transition-all group-hover:bg-ink-900/40 group-hover:opacity-100">
+            <Maximize2 className="h-3.5 w-3.5" />
+          </span>
+        )}
+      </button>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{member.name}</p>
+        <p className="truncate text-xs text-ink-500 dark:text-white/50">
+          {member.role} · {member.team}
+        </p>
+        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-500 dark:text-white/40">
+          <KeyRound className="h-3 w-3" />
+          {credential?.hasPassword
+            ? `Password set · ${new Date(credential.passwordUpdatedAt).toLocaleDateString()}`
+            : "No password set yet"}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={`Edit ${member.name}`}
+        className="rounded-full p-2.5 text-ink-500 hover:bg-ink-900/5 dark:text-white/50 dark:hover:bg-white/10"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        aria-label={`Remove ${member.name}`}
+        className="rounded-full p-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
     </div>
   );
 }

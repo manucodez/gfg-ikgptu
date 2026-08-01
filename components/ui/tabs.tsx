@@ -65,11 +65,11 @@ export function TabsList({
 
   return (
     <TabsScrollContext.Provider value={scrollRef}>
-      <div className="relative w-full overflow-hidden">
-        <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide">
+      <div className="relative flex w-full max-w-full">
+        <div ref={scrollRef} className="min-w-0 flex-1 overflow-x-auto scrollbar-hide px-4">
           <TabsPrimitive.List
             className={cn(
-              "inline-flex min-w-max items-center gap-1 rounded-full bg-ink-900/5 p-1 dark:bg-white/10",
+              "inline-flex w-max min-w-max items-center gap-1 rounded-full bg-ink-900/5 p-1 dark:bg-white/10",
               className
             )}
             {...props}

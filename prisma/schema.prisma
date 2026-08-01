@@ -30,6 +30,11 @@ model Member {
   socialEmail     String?
   socialPortfolio String?
   createdAt       DateTime @default(now())
+  /** Admin-controlled display order (drag-and-drop reordering in the
+   *  dashboard). Defaults to 0 for every existing row, which — paired
+   *  with the createdAt tiebreaker in getMembers() — means nothing
+   *  visually changes until an admin actually reorders something. */
+  sortOrder       Int      @default(0)
 
   credential     MemberCredential?
   changeRequests MemberChangeRequest[]

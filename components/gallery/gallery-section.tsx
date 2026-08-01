@@ -14,7 +14,13 @@ interface GallerySectionProps {
 export function GallerySection({ galleryItems }: GallerySectionProps) {
   const [active, setActive] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const activeIndex = Math.min(active, galleryItems.length - 1);
+
+  // getGalleryItems() (lib/content-store.ts) returns newest-first —
+  // good for the admin panel finding a recent upload to edit, but
+  // reversed here so visitors see the chapter's story in chronological
+  // order, newest photo last rather than jumping ahead of older ones.
+  const orderedItems = [...galleryItems].reverse();
+  const activeIndex = Math.min(active, orderedItems.length - 1);
 
   return (
     <section id="gallery" className="section-pad">
@@ -26,17 +32,17 @@ export function GallerySection({ galleryItems }: GallerySectionProps) {
         />
 
         <div className="mt-10 space-y-4">
-          {galleryItems.length > 0 ? (
+          {orderedItems.length > 0 ? (
             <>
               <GalleryCarousel
-                items={galleryItems}
+                items={orderedItems}
                 active={activeIndex}
                 onActiveChange={setActive}
                 onExpand={() => setLightboxOpen(true)}
               />
-              <GalleryGrid items={galleryItems} active={activeIndex} onSelect={setActive} />
+              <GalleryGrid items={orderedItems} active={activeIndex} onSelect={setActive} />
               <GalleryLightbox
-                items={galleryItems}
+                items={orderedItems}
                 active={activeIndex}
                 onActiveChange={setActive}
                 open={lightboxOpen}

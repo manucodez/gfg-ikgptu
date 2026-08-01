@@ -19,6 +19,7 @@
 
   body {
     @apply bg-paper text-ink-900 font-body antialiased dark:bg-surface-dark dark:text-white/90;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4 {

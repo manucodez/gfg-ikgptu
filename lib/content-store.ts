@@ -88,7 +88,9 @@ function memberToRow(member: Member) {
 }
 
 export async function getMembers(): Promise<Member[]> {
-  const rows = await prisma.member.findMany({ orderBy: { createdAt: "asc" } });
+  const rows = await prisma.member.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  });
   return rows.map(toMember);
 }
 
@@ -105,7 +107,24 @@ export async function saveMembers(members: Member[]): Promise<void> {
 }
 
 export async function addMember(member: Member): Promise<void> {
-  await prisma.member.create({ data: memberToRow(member) });
+  // Append after whatever's currently last, rather than leaving the
+  // default sortOrder of 0 — once some members have been manually
+  // reordered (distinct sortOrder values), a bare 0 would jump a
+  // brand-new member to the front instead of the end.
+  const { _max } = await prisma.member.aggregate({ _max: { sortOrder: true } });
+  const nextSortOrder = (_max.sortOrder ?? -1) + 1;
+  await prisma.member.create({ data: { ...memberToRow(member), sortOrder: nextSortOrder } });
+}
+
+/** Persists a new admin-chosen display order — the whole ordered list
+ *  of member ids is sent every time (simpler and more robust than
+ *  computing gaps/insert positions), setting sortOrder to each
+ *  member's index in that list. Powers the drag-and-drop reordering
+ *  in the admin Members tab. */
+export async function reorderMembers(orderedIds: string[]): Promise<void> {
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.member.update({ where: { id }, data: { sortOrder: index } }))
+  );
 }
 
 export async function updateMember(id: string, patch: Partial<Member>): Promise<Member | null> {
