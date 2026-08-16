@@ -4,13 +4,20 @@ import { useEffect, useState } from "react";
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, Pencil, Trash2, Maximize2, KeyRound, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,15 +40,26 @@ export function MembersPanel() {
   const [viewingAvatarOf, setViewingAvatarOf] = useState<Member | null>(null);
   const [savingOrder, setSavingOrder] = useState(false);
 
-  // PointerSensor covers mouse/trackpad with a small move-distance
+  // MouseSensor covers mouse/trackpad with a small move-distance
   // threshold (so a plain click on the handle doesn't register as a
   // drag). TouchSensor is configured separately with a short
   // press-and-hold delay instead — the standard way to let a touch
   // scroll gesture and a drag gesture coexist on the same element
-  // without one accidentally triggering the other.
+  // without one accidentally triggering the other. KeyboardSensor
+  // makes the same reordering possible with Tab + Space + arrow keys.
+  //
+  // Deliberately MouseSensor here, not PointerSensor: PointerSensor
+  // also receives touch input (it's built on the Pointer Events API,
+  // which unifies mouse/touch/pen), so pairing it with TouchSensor
+  // means both sensors race to claim the same touch — on a phone the
+  // 8px-distance PointerSensor constraint tends to win before
+  // TouchSensor's 200ms hold delay ever gets a chance, which is what
+  // was breaking dragging on mobile. MouseSensor only ever receives
+  // mouse events, so it can't collide with TouchSensor this way.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   async function load() {
@@ -200,9 +218,9 @@ function SortableMemberRow({ member, credential, onEdit, onDelete, onViewAvatar 
         {...attributes}
         {...listeners}
         aria-label={`Drag to reorder ${member.name}`}
-        className="shrink-0 touch-none cursor-grab rounded-lg p-1.5 text-ink-400 hover:bg-ink-900/5 active:cursor-grabbing dark:text-white/30 dark:hover:bg-white/10"
+        className="flex h-10 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-lg text-ink-400 hover:bg-ink-900/5 active:cursor-grabbing dark:text-white/30 dark:hover:bg-white/10"
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-5 w-5" />
       </button>
 
       <button

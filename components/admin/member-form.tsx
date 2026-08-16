@@ -160,11 +160,27 @@ export function MemberForm({ initial, credential, onDone, onCancel }: MemberForm
               </button>
             )}
           </div>
-          <Button type="button" variant="outline" size="md" onClick={handleGeneratePassword} title="Generate a strong password">
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className="w-11 shrink-0 px-0"
+            onClick={handleGeneratePassword}
+            title="Generate a strong password"
+            aria-label="Generate a strong password"
+          >
             <Dices className="h-4 w-4" />
           </Button>
           {password && (
-            <Button type="button" variant="outline" size="md" onClick={handleCopyPassword} title="Copy password">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="w-11 shrink-0 px-0"
+              onClick={handleCopyPassword}
+              title="Copy password"
+              aria-label="Copy password"
+            >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           )}

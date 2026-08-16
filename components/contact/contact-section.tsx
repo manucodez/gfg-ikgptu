@@ -1,16 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { FaWhatsapp, FaInstagram, FaLinkedin, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
+import { MessageCircle, Instagram, Linkedin, Send, CheckCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/section-heading";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
+// Icons come from lucide-react (used everywhere else in the app) —
+// this used to pull from react-icons, a package that was never added
+// to package.json/node_modules, which broke the production build the
+// moment this section was reached.
 const SOCIALS = [
-  { icon: FaWhatsapp, label: "WhatsApp", href: "https://chat.whatsapp.com/FOkUp3cUuLkFWKqOY1vXLk" },
-  { icon: FaLinkedin, label: "LinkedIn", href: "https://www.linkedin.com/company/geeks-for-geeks-ikgptu/" },
-  { icon: FaInstagram, label: "Instagram", href: "https://instagram.com/geeksforgeeksikgptu" },
+  { icon: MessageCircle, label: "WhatsApp", href: "https://chat.whatsapp.com/FOkUp3cUuLkFWKqOY1vXLk" },
+  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/company/geeks-for-geeks-ikgptu/" },
+  { icon: Instagram, label: "Instagram", href: "https://instagram.com/geeksforgeeksikgptu" },
 ];
 
 export function ContactSection() {
@@ -67,7 +71,7 @@ export function ContactSection() {
                 aria-label={social.label}
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-900/10 text-ink-700 transition-colors hover:border-brand-400 hover:text-brand-600 dark:border-white/20 dark:text-white/70"
               >
-                <social.icon className="h-4.5 w-4.5" />
+                <social.icon className="h-4 w-4" />
               </a>
             ))}
           </div>
@@ -85,7 +89,7 @@ export function ContactSection() {
         <div className="card-surface p-6 sm:p-8">
           {submitted ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
-              <FaCheckCircle className="h-9 w-9 text-brand-600 dark:text-brand-400" />
+              <CheckCircle2 className="h-9 w-9 text-brand-600 dark:text-brand-400" />
               <p className="font-display text-lg font-medium">Request received</p>
               <p className="max-w-xs text-sm text-ink-500 dark:text-white/60">
                 A core team member will follow up over email within a few days.
@@ -125,7 +129,7 @@ export function ContactSection() {
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Sending..." : "Submit"} <FaPaperPlane className="h-4 w-4" />
+                {submitting ? "Sending..." : "Submit"} <Send className="h-4 w-4" />
               </Button>
             </form>
           )}

@@ -33,7 +33,7 @@ export function MemberFilters({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Search members..."
-          className="h-10 w-full rounded-full border border-ink-900/10 bg-white pl-9 pr-4 text-sm outline-none transition-colors focus:border-brand-500 dark:border-white/20 dark:bg-surface-darkRaised"
+          className="h-10 w-full rounded-full border border-ink-900/10 bg-white pl-9 pr-4 text-base outline-none transition-colors focus:border-brand-500 dark:border-white/20 dark:bg-surface-darkRaised sm:text-sm"
         />
       </div>
 
@@ -41,7 +41,7 @@ export function MemberFilters({
         <select
           value={team}
           onChange={(e) => onTeamChange(e.target.value)}
-          className="h-10 rounded-full border border-ink-900/10 bg-white px-3 text-sm outline-none focus:border-brand-500 dark:border-white/20 dark:bg-surface-darkRaised"
+          className="h-10 rounded-full border border-ink-900/10 bg-white px-3 text-base outline-none focus:border-brand-500 dark:border-white/20 dark:bg-surface-darkRaised sm:text-sm"
         >
           <option value="All">All teams</option>
           {teams.map((t) => (
@@ -54,7 +54,7 @@ export function MemberFilters({
         <select
           value={year}
           onChange={(e) => onYearChange(e.target.value)}
-          className="h-10 rounded-full border border-ink-900/10 bg-white px-3 text-sm outline-none focus:border-brand-500 dark:border-white/20 dark:bg-surface-darkRaised"
+          className="h-10 rounded-full border border-ink-900/10 bg-white px-3 text-base outline-none focus:border-brand-500 dark:border-white/20 dark:bg-surface-darkRaised sm:text-sm"
         >
           <option value="All">All years</option>
           {years.map((y) => (

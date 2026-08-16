@@ -148,7 +148,7 @@ export function EventForm({ initial, onDone, onCancel }: EventFormProps) {
           <CalendarDays className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
           Date
         </span>
-        <div className="mb-2 flex gap-2">
+        <div className="mb-2 flex flex-wrap gap-2">
           {(["single", "range", "custom"] as const).map((mode) => (
             <button
               type="button"
@@ -235,7 +235,7 @@ export function EventForm({ initial, onDone, onCancel }: EventFormProps) {
 
       <div>
         <span className="mb-1.5 block text-sm font-medium">Status</span>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {EVENT_STATUSES.map((s) => (
             <button
               type="button"
@@ -304,7 +304,7 @@ export function EventForm({ initial, onDone, onCancel }: EventFormProps) {
               }
             }}
             placeholder="Add a custom tag…"
-            className="h-9 max-w-[220px] text-sm"
+            className="h-9 max-w-[220px] text-base sm:text-sm"
           />
           <Button type="button" variant="outline" size="sm" onClick={addCustomTag}>
             <Plus className="h-3.5 w-3.5" /> Add
