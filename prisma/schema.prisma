@@ -96,6 +96,24 @@ model StatItem {
   @@map("stats")
 }
 
+// A named admin account (own email + password), so multiple people
+// can each sign in to /admin independently instead of sharing one
+// login. This is additive: the legacy single-admin env-var login
+// (ADMIN_EMAIL + ADMIN_PASSWORD_HASH_B64, checked in
+// app/api/admin/login/route.ts) still works as a break-glass fallback
+// — useful for creating the very first row here, and as a recovery
+// path if the database is ever unreachable. See lib/types.ts's Admin
+// for field docs.
+model Admin {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("admins")
+}
+
 // Mirrors lib/types.ts's MemberCredential. Deliberately its own
 // table rather than columns on Member — see the comment on
 // MemberCredential in lib/types.ts for why.

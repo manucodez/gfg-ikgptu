@@ -10,6 +10,7 @@ import { JoinRequestsPanel } from "@/components/admin/join-requests-panel";
 import { LoginActivityPanel } from "@/components/admin/login-activity-panel";
 import { StatsPanel } from "@/components/admin/stats-panel";
 import { AchievementsPanel } from "@/components/admin/achievements-panel";
+import { AdminsPanel } from "@/components/admin/admins-panel";
 
 export function AdminDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
@@ -46,6 +47,7 @@ export function AdminDashboard() {
         <TabsTrigger value="gallery">Gallery</TabsTrigger>
         <TabsTrigger value="stats">Stats</TabsTrigger>
         <TabsTrigger value="achievements">Achievements</TabsTrigger>
+        <TabsTrigger value="admins">Admins</TabsTrigger>
       </TabsList>
 
       <TabsContent value="requests" className="mt-6">
@@ -71,6 +73,9 @@ export function AdminDashboard() {
       </TabsContent>
       <TabsContent value="achievements" className="mt-6">
         <AchievementsPanel />
+      </TabsContent>
+      <TabsContent value="admins" className="mt-6">
+        <AdminsPanel />
       </TabsContent>
     </Tabs>
   );

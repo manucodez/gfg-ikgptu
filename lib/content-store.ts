@@ -14,6 +14,7 @@ import type {
   JoinRequest,
   JoinRequestStatus,
   LoginEvent,
+  Admin,
 } from "@/lib/types";
 import { parseDateValue } from "@/lib/utils";
 
@@ -536,6 +537,62 @@ export async function setCredentialForMember(memberId: string, passwordHash: str
 
 export async function deleteCredentialForMember(memberId: string): Promise<void> {
   await prisma.memberCredential.delete({ where: { memberId } }).catch(() => {});
+}
+
+// --- Admins (people who can sign in to /admin) -----------------------
+
+function toAdmin(row: { id: string; name: string; email: string; createdAt: Date }): Admin {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export async function getAdmins(): Promise<Admin[]> {
+  const rows = await prisma.admin.findMany({ orderBy: { createdAt: "asc" } });
+  return rows.map(toAdmin);
+}
+
+export async function countAdmins(): Promise<number> {
+  return prisma.admin.count();
+}
+
+/** Includes passwordHash, unlike every other Admin-returning function
+ *  here — this is the one place (login) that actually needs it. Never
+ *  forward the result of this straight into an API response. */
+export async function findAdminByEmail(
+  email: string
+): Promise<(Admin & { passwordHash: string }) | null> {
+  const row = await prisma.admin.findUnique({ where: { email: email.toLowerCase() } });
+  if (!row) return null;
+  return { ...toAdmin(row), passwordHash: row.passwordHash };
+}
+
+export async function isAdminEmailTaken(email: string): Promise<boolean> {
+  const row = await prisma.admin.findUnique({ where: { email: email.toLowerCase() } });
+  return !!row;
+}
+
+export async function addAdmin(admin: {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+}): Promise<Admin> {
+  const row = await prisma.admin.create({
+    data: { ...admin, email: admin.email.toLowerCase() },
+  });
+  return toAdmin(row);
+}
+
+export async function updateAdminPassword(id: string, passwordHash: string): Promise<void> {
+  await prisma.admin.update({ where: { id }, data: { passwordHash } });
+}
+
+export async function deleteAdmin(id: string): Promise<void> {
+  await prisma.admin.delete({ where: { id } });
 }
 
 /**

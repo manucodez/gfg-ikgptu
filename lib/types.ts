@@ -157,6 +157,22 @@ export interface MemberChangeRequest {
 }
 
 /**
+ * One of possibly several people who can sign in to /admin. Unlike
+ * MemberCredential, there's no separate "public-facing" record this
+ * needs to stay off of — an Admin's own row is never sent to the
+ * browser except through the admin-only Admins tab, so passwordHash
+ * simply isn't part of this type; it's fetched separately (see
+ * findAdminByEmail in lib/content-store.ts) only where actually
+ * needed, at login.
+ */
+export interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string; // ISO timestamp
+}
+
+/**
  * A member's login password, stored separately from `content/members.json`
  * on purpose: Member records get read straight into public page props
  * (the member grid, the hero preview), so a password hash must never

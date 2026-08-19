@@ -253,10 +253,30 @@ password reset emails, or "log in with your college Google account":
 - **[Clerk](https://clerk.com)** — hosted auth with prebuilt sign-up/sign-in
   UI, if you'd rather not build login forms at all.
 
-The admin login (env-var based) is deliberately simpler than member auth and
-is fine to leave as-is even after upgrading member auth — a chapter site
-only needs one or two admins, and giving them an env-var-controlled login
-avoids needing an "admin" role/permission system in the database at all.
+Admin login is database-backed (the `admins` table — name, email, bcrypt
+hash), managed from the dashboard's **Admins** tab, so any number of people
+can each have their own account. The original env-var login
+(`ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH_B64`) still works alongside it as a
+bootstrap/break-glass fallback and doesn't need to be removed. There's no
+tiered permission system — every admin account can do everything any other
+admin can, including managing other admins — which is fine for a chapter
+site's low-friction, mutual-trust model, but worth knowing if that's ever
+not the fit you want.
+
+**If you're adding this to a site that's already deployed**, the `admins`
+table needs to exist in your production database before the new code can
+use it. Since this repo doesn't track migration history (the schema was
+applied with `db push`, not `migrate`), run this once, pointed at your
+production `DATABASE_URL`, then redeploy:
+
+```bash
+npx prisma db push
+```
+
+This only adds the new `admins` table — every other table is already an
+exact match, so nothing else changes. Then log in with your existing
+`ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH_B64` credentials and use the new
+**Admins** tab to create a real account for each person who needs one.
 
 ## Going to production checklist
 

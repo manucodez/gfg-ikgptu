@@ -69,6 +69,11 @@ For a production build: `npm run build && npm start`.
 `ADMIN_PASSWORD_HASH_B64` in `.env.local` (it must stay base64-encoded —
 see the comment there for why).
 
+This env-var login is a bootstrap/fallback account. For multiple admins,
+each with their own email and password, sign in with it once and use the
+**Admins** tab to create a named account per person — see "How login
+works" below.
+
 ### Member login — how to test it
 
 No member passwords are set yet, since real member data is already loaded
@@ -89,9 +94,15 @@ sending.
 
 ## How login works
 
-- **Admin** — a single set of credentials in `.env.local`
-  (`ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH_B64`). No database row at all;
-  a chapter only needs one or two admins.
+- **Admin** — any number of named accounts, stored in the `admins` table
+  (name, email, bcrypt password hash), managed from the dashboard's
+  **Admins** tab: add an admin, reset another admin's password, or
+  remove one. Each admin signs in independently with their own email and
+  password. The `.env.local` credentials (`ADMIN_EMAIL` +
+  `ADMIN_PASSWORD_HASH_B64`) still work alongside these as a fallback
+  login — that's what you use the very first time, before any row
+  exists in `admins`, and it doubles as a break-glass account if the
+  database is ever unreachable.
 - **Members** — log in with the email an admin put on their profile
   (a member's `socials.email`, stored on the `members` table) and a
   password. That password is **not** stored on the same record — it lives
@@ -129,12 +140,14 @@ app/
   reset-password/page.tsx             OTP-verified "forgot / set password" flow
   admin/login/page.tsx                Admin login
   admin/page.tsx                      Admin dashboard (protected) — Join Requests, Activity,
-                                        Requests, Members, Events, Gallery, Stats, Achievements
+                                        Requests, Members, Events, Gallery, Stats, Achievements,
+                                        Admins
   dashboard/page.tsx                  Member profile + email editor (protected)
   api/join/route.ts                   Public: where the homepage "Join" form submits to
   api/auth/login,logout/route.ts      Member auth endpoints
   api/auth/otp/request,verify/…       OTP request + verification endpoints
   api/admin/login,logout/route.ts     Admin auth endpoints
+  api/admin/admins/…                  Admin account CRUD (add, reset password, remove)
   api/admin/members/…                 Member CRUD (+ photo upload/removal, + password,
                                         + credential-status)
   api/admin/events/…                  Event CRUD (+ registration link, + homepage notify flag)
@@ -164,7 +177,7 @@ components/
   auth/logout-button.tsx
   admin/              Dashboard tabs: join-requests-panel, requests-panel,
                       members-panel + member-form, events-panel + event-form,
-                      gallery-panel, stats-panel, achievements-panel
+                      gallery-panel, stats-panel, achievements-panel, admins-panel
   ui/                 Hand-built primitives: button, card, badge, dialog, tabs, input, textarea
 
 content/              One-time seed source only (see prisma/seed.ts) — the

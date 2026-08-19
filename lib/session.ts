@@ -28,6 +28,10 @@ export interface AdminSessionPayload {
   role: "admin";
   sub: string;
   email: string;
+  /** Display name — the Admin row's `name` for a database-backed
+   *  admin, or a generic "Admin" for the env-var fallback login,
+   *  which has no name of its own. */
+  name: string;
 }
 
 function getSecretKey() {
