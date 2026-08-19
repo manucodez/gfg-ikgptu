@@ -138,11 +138,11 @@ export function MembersPanel() {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={members.map((m) => m.id)} strategy={rectSortingStrategy}>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid w-full min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-3">
             {members.map((member) => {
               const credential = credentialStatuses[member.id];
               return editingId === member.id ? (
-                <div key={member.id} className="sm:col-span-2">
+                <div key={member.id} className="col-span-full">
                   <MemberForm
                     initial={member}
                     credential={credential}
@@ -209,7 +209,7 @@ function SortableMemberRow({ member, credential, onEdit, onDelete, onViewAvatar 
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-2 rounded-2xl border border-ink-900/10 bg-white p-4 dark:border-white/10 dark:bg-surface-darkRaised",
+        "flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-ink-900/10 bg-white p-3 dark:border-white/10 dark:bg-surface-darkRaised sm:p-4",
         isDragging && "relative z-10 opacity-60 shadow-raised"
       )}
     >
