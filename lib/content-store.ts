@@ -121,11 +121,33 @@ export async function addMember(member: Member): Promise<void> {
  *  of member ids is sent every time (simpler and more robust than
  *  computing gaps/insert positions), setting sortOrder to each
  *  member's index in that list. Powers the drag-and-drop reordering
- *  in the admin Members tab. */
+ *  in the admin Members tab.
+ *
+ *  This is one raw UPDATE...FROM(VALUES) statement, not N separate
+ *  prisma.member.update() calls wrapped in $transaction — that was
+ *  the original approach, and it was the actual bug behind "Couldn't
+ *  save the new order": each update is its own round trip to Neon,
+ *  all sequential inside one interactive transaction, and Prisma's
+ *  default interactive-transaction timeout is 5 seconds. Past a
+ *  couple dozen members (or just a slow connection), the whole
+ *  transaction blew past that timeout and got rolled back — every
+ *  time, not intermittently, since total duration scales with member
+ *  count regardless of how many actually moved. A single statement
+ *  is one round trip no matter how many members there are, and is
+ *  atomic on its own, so there's no $transaction (and no timeout) to
+ *  reach for in the first place. */
 export async function reorderMembers(orderedIds: string[]): Promise<void> {
-  await prisma.$transaction(
-    orderedIds.map((id, index) => prisma.member.update({ where: { id }, data: { sortOrder: index } }))
+  if (orderedIds.length === 0) return;
+  const rows = Prisma.join(
+    orderedIds.map((id, index) => Prisma.sql`(${id}::text, ${index}::int)`),
+    ", "
   );
+  await prisma.$executeRaw(Prisma.sql`
+    UPDATE "members" AS m
+    SET "sortOrder" = v.sort_order
+    FROM (VALUES ${rows}) AS v(id, sort_order)
+    WHERE m.id = v.id
+  `);
 }
 
 export async function updateMember(id: string, patch: Partial<Member>): Promise<Member | null> {

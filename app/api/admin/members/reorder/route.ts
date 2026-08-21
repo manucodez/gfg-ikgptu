@@ -21,16 +21,22 @@ export async function POST(request: Request) {
   try {
     await reorderMembers(orderedIds);
   } catch (error) {
-    // Most likely cause: one of these ids was deleted by another
-    // admin between this list loading in the browser and the drag
-    // landing here — reorderMembers updates every id in one
-    // transaction, so a single missing row (Prisma error P2025) rolls
-    // the whole reorder back rather than partially applying it. The
-    // client reloads the current list from the server on any non-2xx
-    // response here, which self-heals this case automatically.
+    // Always logged server-side (visible in Vercel's function logs)
+    // regardless of what else happens below.
     console.error("Failed to save member order:", error);
+
+    // A Prisma error carries a short machine code (e.g. P2025 for "no
+    // matching row") that's safe to show — it's not a stack trace or
+    // connection string, just a category label. Surfacing it directly
+    // in the response means the next failure (if any) is diagnosable
+    // from the on-screen banner alone, without needing Vercel log
+    // access to see what actually went wrong.
+    const detail =
+      error && typeof error === "object" && "code" in error
+        ? ` (${(error as { code: unknown }).code})`
+        : "";
     return NextResponse.json(
-      { error: "Couldn't save the new order — reloading the current list." },
+      { error: `Couldn't save the new order${detail} — reloading the current list.` },
       { status: 409 }
     );
   }
