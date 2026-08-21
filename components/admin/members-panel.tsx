@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -39,6 +39,18 @@ export function MembersPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingAvatarOf, setViewingAvatarOf] = useState<Member | null>(null);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  // Reorder requests are chained through this queue instead of firing
+  // independently, so a second drag started while the first one is
+  // still saving can't have its write land at the server before (and
+  // then get silently overwritten by) the first one's. Each call
+  // below only starts once every earlier one has settled, so the
+  // last drag the admin makes is always the last write to reach the
+  // database — otherwise, two quick drags could finish out of order
+  // over the network and the final order on screen wouldn't be the
+  // one that actually got saved.
+  const saveQueueRef = useRef(Promise.resolve());
 
   // MouseSensor covers mouse/trackpad with a small move-distance
   // threshold (so a plain click on the handle doesn't register as a
@@ -94,15 +106,35 @@ export function MembersPanel() {
     // server if the save actually fails.
     const reordered = arrayMove(members, oldIndex, newIndex);
     setMembers(reordered);
+    setOrderError(null);
 
+    const orderedIds = reordered.map((m) => m.id);
     setSavingOrder(true);
-    const res = await fetch("/api/admin/members/reorder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderedIds: reordered.map((m) => m.id) }),
+
+    // Chained onto the queue rather than fired directly — see the
+    // comment on saveQueueRef above for why. The .catch keeps the
+    // queue itself from ever becoming permanently rejected (which
+    // would silently block every future reorder), while still
+    // surfacing the failure below.
+    saveQueueRef.current = saveQueueRef.current.then(async () => {
+      try {
+        const res = await fetch("/api/admin/members/reorder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderedIds }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setOrderError(data.error ?? "Couldn't save the new order.");
+          load();
+        }
+      } catch {
+        setOrderError("Couldn't reach the server to save the new order.");
+        load();
+      } finally {
+        setSavingOrder(false);
+      }
     });
-    setSavingOrder(false);
-    if (!res.ok) load();
   }
 
   if (!members) return <p className="text-sm text-ink-500 dark:text-white/50">Loading members...</p>;
@@ -121,6 +153,12 @@ export function MembersPanel() {
         )}
       </div>
 
+      {orderError && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-400">
+          {orderError}
+        </p>
+      )}
+
       <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-white/40">
         <GripVertical className="h-3.5 w-3.5 shrink-0" />
         Drag the handle on any member to change the order they appear in on the site.
@@ -137,7 +175,17 @@ export function MembersPanel() {
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={members.map((m) => m.id)} strategy={rectSortingStrategy}>
+        {/* Excludes the member currently being edited: that row
+            renders as a plain form div below, not a SortableMemberRow,
+            so it has no sortable node for dnd-kit to measure. Leaving
+            its id in this list anyway is what threw the drag error —
+            dnd-kit expects every id here to match an actually-mounted
+            sortable node. Everyone else stays fully draggable; you
+            just can't drop directly onto the row that's mid-edit. */}
+        <SortableContext
+          items={members.filter((m) => m.id !== editingId).map((m) => m.id)}
+          strategy={rectSortingStrategy}
+        >
           <div className="grid w-full min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-3">
             {members.map((member) => {
               const credential = credentialStatuses[member.id];
