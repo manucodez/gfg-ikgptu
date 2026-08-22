@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Code2, ArrowRight, KeyRound, CheckCircle2 } from "lucide-react";
+import { ArrowRight, KeyRound, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -68,8 +69,19 @@ export default function ResetPasswordPage() {
     <main className="flex min-h-screen items-center justify-center bg-paper px-4 dark:bg-surface-dark">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <Code2 className="h-5 w-5" />
+          {/* The white backdrop only shows in dark mode — the logo's
+              navy "Chapter" text is nearly invisible directly against
+              the dark theme's near-black background otherwise. This
+              keeps the logo artwork itself untouched rather than
+              generating a dark-mode-specific recolored version. */}
+          <Link href="/" className="rounded-2xl dark:bg-white dark:p-4 dark:shadow-sm">
+            <Image
+              src="/logo.png"
+              alt="GFG Campus Chapter, IKGPTU logo"
+              width={1283}
+              height={869}
+              className="h-20 w-auto"
+            />
           </Link>
           <h1 className="mt-4 font-display text-2xl font-medium">Set your password</h1>
           <p className="mt-1 text-sm text-ink-500 dark:text-white/60">

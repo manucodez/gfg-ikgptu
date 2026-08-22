@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Code2 } from "lucide-react";
+import Image from "next/image";
 import { getPendingRequestForMember } from "@/lib/content-store";
 import { getLoggedInMember } from "@/lib/current-member";
 import { LogoutButton } from "@/components/auth/logout-button";
@@ -30,9 +30,13 @@ export default async function DashboardPage() {
       <div className="border-b border-ink-900/10 bg-white dark:border-white/10 dark:bg-surface-darkRaised">
         <div className="container flex items-center justify-between py-5">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-              <Code2 className="h-4 w-4" />
-            </span>
+            <Image
+              src="/logo-mark.png"
+              alt="GFG Campus Chapter, IKGPTU logo"
+              width={642}
+              height={506}
+              className="h-8 w-auto"
+            />
             <span className="font-display text-sm font-semibold">GFG Campus Chapter</span>
           </Link>
           <LogoutButton endpoint="/api/auth/logout" redirectTo="/login" />

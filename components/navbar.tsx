@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, Code2 } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/members/avatar";
@@ -28,9 +29,14 @@ export function Navbar({ loggedInMember }: NavbarProps) {
     <header className="sticky top-0 z-40 border-b border-ink-900/10 bg-paper dark:border-white/10 dark:bg-surface-dark">
       <div className="container flex h-16 items-center justify-between">
         <Link href="#home" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <Code2 className="h-4 w-4" />
-          </span>
+          <Image
+            src="/logo-mark.png"
+            alt="GFG Campus Chapter, IKGPTU logo"
+            width={642}
+            height={506}
+            className="h-8 w-auto"
+            priority
+          />
           <span className="font-display text-sm font-semibold leading-tight">
             GFG Campus Chapter
             <span className="block text-[11px] font-mono font-normal text-ink-500 dark:text-white/50">

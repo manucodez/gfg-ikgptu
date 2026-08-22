@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import { SESSION_COOKIES, verifySessionToken, type AdminSessionPayload } from "@/lib/session";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
@@ -22,12 +22,18 @@ export default async function AdminPage() {
       <div className="sticky top-0 z-40 border-b border-ink-900/10 bg-white dark:border-white/10 dark:bg-surface-darkRaised">
         <div className="container flex items-center justify-between gap-3 py-5">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white">
-              <ShieldCheck className="h-4 w-4" />
-            </span>
+            <Image
+              src="/logo-mark.png"
+              alt="GFG Campus Chapter, IKGPTU logo"
+              width={642}
+              height={506}
+              className="h-8 w-auto shrink-0"
+            />
             <div className="min-w-0">
               <p className="font-display text-sm font-semibold leading-tight">Admin Dashboard</p>
-              <p className="truncate text-xs text-ink-500 dark:text-white/50">{session.email}</p>
+              <p className="truncate text-xs text-ink-500 dark:text-white/50">
+                {session.name} · {session.email}
+              </p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3">
