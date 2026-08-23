@@ -1,32 +1,6 @@
 /**
  * The GFG Campus Chapter, IKGPTU logo, as inline SVG components.
- *
- * This is a from-scratch vector recreation of the official logo
- * artwork (not a traced/embedded raster image): the graduation cap,
- * the two-"G" owl-eyes mark, and the wordmark text are all real SVG
- * shapes and paths. The "eyes" are literally the letterform "G" from
- * Poppins Bold — one used as-is, one mirrored — which is what the
- * original artwork's eyes are actually built from. The wordmark text
- * ("Student Chapter" in Poppins Regular, "IKGPTU" in Poppins Bold) is
- * likewise real vector paths, converted from those fonts' outlines
- * rather than left as live <text> — this guarantees the logo renders
- * identically everywhere (no dependency on a font being loaded/
- * available) the way a real logo file should.
- *
- * Colors are the logo's actual brand colors (#00895E green, #002B46
- * navy), not this site's slightly different --brand-600. The navy
- * elements pick up a `dark:` override to a near-white so the mark
- * stays legible on the site's dark theme — the artwork itself is
- * unchanged, only the color response to theme differs.
- *
- * Two components are exported:
- * - `LogoMark`: the graphic mark only (cap + eyes + nose), for
- *   compact spots — navbar, footer, dashboard headers — where the
- *   full lockup's wordmark text would be too small to read.
- * - `Logo`: the full lockup (mark + wordmark), for larger, spacious
- *   placements like the login-style pages.
- */
-
+**/
 const GREEN = "#00895E";
 
 function MarkPieces() {
@@ -55,9 +29,11 @@ function MarkPieces() {
 
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="-924 -494 1760 1440" className={className} aria-hidden="true">
-      <MarkPieces />
-    </svg>
+    <img
+      src="https://media.geeksforgeeks.org/gfg-gg-logo.svg"
+      className={className}
+      alt="GeeksforGeeks"
+    />
   );
 }
 
