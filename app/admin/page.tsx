@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Image from "next/image";
+import { LogoMark } from "@/components/logo";
 import { SESSION_COOKIES, verifySessionToken, type AdminSessionPayload } from "@/lib/session";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
@@ -22,13 +22,7 @@ export default async function AdminPage() {
       <div className="sticky top-0 z-40 border-b border-ink-900/10 bg-white dark:border-white/10 dark:bg-surface-darkRaised">
         <div className="container flex items-center justify-between gap-3 py-5">
           <div className="flex min-w-0 items-center gap-2">
-            <Image
-              src="/logo-mark.png"
-              alt="GFG Campus Chapter, IKGPTU logo"
-              width={642}
-              height={506}
-              className="h-8 w-auto shrink-0"
-            />
+            <LogoMark className="h-8 w-auto shrink-0" />
             <div className="min-w-0">
               <p className="font-display text-sm font-semibold leading-tight">Admin Dashboard</p>
               <p className="truncate text-xs text-ink-500 dark:text-white/50">
