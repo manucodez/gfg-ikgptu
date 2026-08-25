@@ -62,6 +62,26 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* PWA boot splash (components/pwa-splash.tsx). Hidden by default —
+     regular browser visits never see it. It's only switched on when the
+     tiny blocking script in layout.tsx's <head> detects the page is
+     running standalone (installed/launched from the home screen) and
+     adds `pwa-standalone` to <html>, which happens before first paint,
+     so there's no flash either way. Display is handled entirely here
+     rather than with a Tailwind utility class on the element, so it
+     can't be fought over by two `display` rules of equal specificity. */
+  .pwa-splash {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  html.pwa-standalone .pwa-splash {
+    display: flex;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
