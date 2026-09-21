@@ -3,15 +3,39 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ScrollRestorationFix } from "@/components/scroll-restoration-fix";
 import { PwaRegister } from "@/components/pwa-register";
 import { PwaSplash } from "@/components/pwa-splash";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import "./globals.css";
 
+// Falls back to localhost so this never throws in local dev — set the
+// real one in production (Vercel project settings, or .env.local for
+// a production-like build) so absolute URLs in the OG/Twitter tags
+// below and in app/sitemap.ts point at the live site, not localhost.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const title = "GeeksforGeeks Student Chapter — IKGPTU";
+const description =
+  "The official GeeksforGeeks campus chapter at IKGPTU — DSA practice, workshops, hackathons, and mentorship for every branch and year.";
+
 export const metadata: Metadata = {
-  title: "GeeksforGeeks Student Chapter — IKGPTU",
-  description:
-    "The official GeeksforGeeks campus chapter at IKGPTU — DSA practice, workshops, hackathons, and mentorship for every branch and year.",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
   appleWebApp: {
     title: "GFG IKGPTU",
     statusBarStyle: "default",
+  },
+  openGraph: {
+    title,
+    description,
+    url: "/",
+    siteName: title,
+    type: "website",
+    images: [{ url: "/icons/icon-512.png", width: 512, height: 512, alt: "GFG IKGPTU logo" }],
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+    images: ["/icons/icon-512.png"],
   },
 };
 
@@ -52,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ScrollRestorationFix />
         <PwaRegister />
+        <PageViewTracker />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <PwaSplash />
           {children}

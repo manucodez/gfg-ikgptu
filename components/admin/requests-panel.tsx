@@ -15,6 +15,7 @@ const FIELD_LABELS: Record<keyof MemberEditableFields, string> = {
   github: "GitHub",
   linkedin: "LinkedIn",
   portfolio: "Portfolio",
+  codeforcesHandle: "Codeforces handle",
 };
 
 function formatValue(field: keyof MemberEditableFields, value: unknown): string {

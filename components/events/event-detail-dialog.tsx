@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, MapPin, ExternalLink, Share2, Check } from "lucide-react";
+import { CalendarDays, MapPin, ExternalLink, Share2, Check, CalendarPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ChapterEvent } from "@/lib/types";
 import { STATUS_LABEL } from "@/components/events/event-card";
 import { shareEvent, type ShareResult } from "@/lib/share";
+import { parseEventDateString } from "@/lib/utils";
 
 interface EventDetailDialogProps {
   event: ChapterEvent | null;
@@ -105,6 +106,18 @@ export function EventDetailDialog({ event, onOpenChange }: EventDetailDialogProp
                     <Share2 className="h-4 w-4" />
                   )}
                 </button>
+
+                {parseEventDateString(event.date).mode !== "custom" && (
+                  <a
+                    href={`/api/events/${event.id}/ics`}
+                    download
+                    aria-label="Add to calendar"
+                    title="Add to calendar"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ink-900/10 text-ink-500 hover:bg-ink-900/5 dark:border-white/10 dark:text-white/50 dark:hover:bg-white/10"
+                  >
+                    <CalendarPlus className="h-4 w-4" />
+                  </a>
+                )}
               </div>
               {shareResult?.message && (
                 <p className="mt-2.5 text-xs text-brand-700 dark:text-brand-400">{shareResult.message}</p>

@@ -2,16 +2,18 @@ import { NextResponse } from "next/server";
 import { addAdmin, getAdmins, isAdminEmailTaken } from "@/lib/content-store";
 import { hashPassword } from "@/lib/password";
 import { isValidEmail } from "@/lib/validation";
+import { getCurrentAdminSession, isOwnerSession } from "@/lib/admin-auth";
 
 // Every request must hit this handler fresh — GET routes with no
 // per-request API usage can otherwise get statically pre-rendered
 // at build time and silently serve stale data forever.
 export const dynamic = "force-dynamic";
 
-// Protected the same way every other /api/admin/* route is: by
-// middleware.ts, purely on "is there a valid admin session cookie" —
-// any signed-in admin can view and add other admins here. There's no
-// separate super-admin tier; see BACKEND.md.
+// Protected two ways: middleware.ts already requires a valid admin
+// session cookie for every /api/admin/* route (any signed-in admin
+// can GET this list). Creating a new admin additionally requires the
+// "owner" role below — see the comment on the Admin model in
+// prisma/schema.prisma for what that distinction means.
 
 export async function GET() {
   const admins = await getAdmins();
@@ -19,10 +21,18 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const session = await getCurrentAdminSession();
+  if (!session) {
+    // Shouldn't happen — middleware.ts already gates this route — but
+    // fail closed rather than assume.
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  }
+
   const body = await request.json().catch(() => null);
   const name = String(body?.name ?? "").trim();
   const email = String(body?.email ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
+  const requestedRole = body?.role === "owner" ? "owner" : "admin";
 
   if (!name || !email) {
     return NextResponse.json({ error: "Name and email are required." }, { status: 400 });
@@ -55,11 +65,26 @@ export async function POST(request: Request) {
     );
   }
 
+  const existingAdmins = await getAdmins();
+  // The very first database-backed admin always becomes "owner",
+  // regardless of what was requested — otherwise a freshly-provisioned
+  // site could end up with zero admins able to manage other admins
+  // (the env-var login is always an implicit owner, but only while
+  // that env var stays set).
+  const role = existingAdmins.length === 0 ? "owner" : requestedRole;
+  if (existingAdmins.length > 0 && !isOwnerSession(session)) {
+    return NextResponse.json(
+      { error: "Only an owner can add new admins." },
+      { status: 403 }
+    );
+  }
+
   const admin = await addAdmin({
     id: `adm-${Date.now().toString(36)}`,
     name,
     email,
     passwordHash: await hashPassword(password),
+    role,
   });
   return NextResponse.json(admin, { status: 201 });
 }

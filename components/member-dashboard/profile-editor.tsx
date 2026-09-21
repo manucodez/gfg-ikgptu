@@ -33,6 +33,7 @@ export function ProfileEditor({ member, pendingRequest }: ProfileEditorProps) {
       github: pendingRequest?.changes.github ?? member.socials.github ?? "",
       linkedin: pendingRequest?.changes.linkedin ?? member.socials.linkedin ?? "",
       portfolio: pendingRequest?.changes.portfolio ?? member.socials.portfolio ?? "",
+      codeforcesHandle: pendingRequest?.changes.codeforcesHandle ?? member.codeforcesHandle ?? "",
     }),
     [member, pendingRequest]
   );
@@ -184,6 +185,13 @@ export function ProfileEditor({ member, pendingRequest }: ProfileEditorProps) {
         </div>
         <Field label="Portfolio URL" error={fieldErrors.portfolio}>
           <Input name="portfolio" type="url" defaultValue={initial.portfolio} placeholder="https://your-site.dev" />
+        </Field>
+        <Field label="Codeforces handle (optional)">
+          <Input
+            name="codeforcesHandle"
+            defaultValue={initial.codeforcesHandle}
+            placeholder="tourist"
+          />
         </Field>
 
         <p className="text-xs text-ink-500 dark:text-white/40">

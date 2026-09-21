@@ -5,6 +5,7 @@ import {
   saveUploadedImage,
   isEmailTakenByAnotherMember,
   setCredentialForMember,
+  revalidateHomepageContent,
 } from "@/lib/content-store";
 import { hashPassword } from "@/lib/password";
 import type { Member } from "@/lib/types";
@@ -85,11 +86,13 @@ export async function POST(request: Request) {
       email: email || undefined,
       portfolio: String(formData.get("portfolio") ?? "") || undefined,
     },
+    codeforcesHandle: String(formData.get("codeforcesHandle") ?? "").trim() || undefined,
   };
 
   await addMember(member);
   if (password) {
     await setCredentialForMember(member.id, await hashPassword(password));
   }
+  revalidateHomepageContent();
   return NextResponse.json(member, { status: 201 });
 }

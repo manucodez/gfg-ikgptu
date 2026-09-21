@@ -32,6 +32,12 @@ export interface AdminSessionPayload {
    *  admin, or a generic "Admin" for the env-var fallback login,
    *  which has no name of its own. */
   name: string;
+  /** "owner" can manage other admin accounts; "admin" can't. Always
+   *  "owner" for the env-var fallback login (sub === "env-admin"),
+   *  regardless of what's set here — see isOwnerSession() in
+   *  lib/admin-auth.ts, which is what every permission check actually
+   *  calls rather than reading this field directly. */
+  adminRole: "owner" | "admin";
 }
 
 function getSecretKey() {

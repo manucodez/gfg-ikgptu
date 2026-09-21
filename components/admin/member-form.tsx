@@ -125,6 +125,9 @@ export function MemberForm({ initial, credential, onDone, onCancel }: MemberForm
         <Field label="Portfolio URL">
           <Input name="portfolio" type="url" defaultValue={initial?.socials.portfolio} placeholder="https://their-site.dev" />
         </Field>
+        <Field label="Codeforces handle (optional)">
+          <Input name="codeforcesHandle" defaultValue={initial?.codeforcesHandle} placeholder="tourist" />
+        </Field>
       </div>
 
       <div>

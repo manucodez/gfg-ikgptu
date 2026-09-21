@@ -5,6 +5,7 @@ import {
   updateGalleryItem,
   saveUploadedImage,
   deleteUploadedImage,
+  revalidateHomepageContent,
 } from "@/lib/content-store";
 import type { GalleryItem } from "@/lib/types";
 
@@ -68,10 +69,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     await deleteUploadedImage(previousImage).catch(() => {});
   }
 
+  revalidateHomepageContent();
   return NextResponse.json(updated);
 }
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   await deleteGalleryItem(params.id);
+  revalidateHomepageContent();
   return NextResponse.json({ ok: true });
 }

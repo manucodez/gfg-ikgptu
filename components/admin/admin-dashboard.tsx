@@ -11,14 +11,18 @@ import { LoginActivityPanel } from "@/components/admin/login-activity-panel";
 import { StatsPanel } from "@/components/admin/stats-panel";
 import { AchievementsPanel } from "@/components/admin/achievements-panel";
 import { AdminsPanel } from "@/components/admin/admins-panel";
+import { OverviewPanel } from "@/components/admin/overview-panel";
+import type { AdminSessionPayload } from "@/lib/session";
 
-export function AdminDashboard() {
+export function AdminDashboard({ session }: { session: AdminSessionPayload }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [newJoinCount, setNewJoinCount] = useState(0);
+  const isOwner = session.sub === "env-admin" || session.adminRole === "owner";
 
   return (
-    <Tabs defaultValue="requests">
+    <Tabs defaultValue="overview">
       <TabsList>
+        <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="requests" className="flex items-center gap-1.5">
           Requests
           {pendingCount > 0 && (
@@ -50,6 +54,9 @@ export function AdminDashboard() {
         <TabsTrigger value="admins">Admins</TabsTrigger>
       </TabsList>
 
+      <TabsContent value="overview" className="mt-6">
+        <OverviewPanel />
+      </TabsContent>
       <TabsContent value="requests" className="mt-6">
         <RequestsPanel onPendingCountChange={setPendingCount} />
       </TabsContent>
@@ -75,7 +82,7 @@ export function AdminDashboard() {
         <AchievementsPanel />
       </TabsContent>
       <TabsContent value="admins" className="mt-6">
-        <AdminsPanel />
+        <AdminsPanel isOwner={isOwner} currentAdminId={session.sub} />
       </TabsContent>
     </Tabs>
   );

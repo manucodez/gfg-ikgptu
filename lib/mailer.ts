@@ -70,3 +70,50 @@ function otpEmailHtml(code: string): string {
   </p>
 </div>`;
 }
+
+/**
+ * Notifies admins of something that needs their attention (a new join
+ * request, a new profile change request) — see
+ * lib/content-store.ts's getAdminNotificationRecipients for who that
+ * is. Deliberately non-throwing: every call site treats this as
+ * fire-and-forget (`.catch(() => {})`), since a missed notification
+ * email should never fail or slow down the actual submission it's
+ * about. Falls back to a console log the same way sendOtpEmail does
+ * when Gmail isn't configured, so local dev stays quiet-but-visible.
+ */
+export async function sendAdminNotificationEmail(
+  recipients: string[],
+  subject: string,
+  bodyHtml: string,
+  bodyText: string
+): Promise<void> {
+  if (recipients.length === 0) return;
+
+  if (!transporter) {
+    console.log(`\n📧 [DEV EMAIL — admin notification to ${recipients.join(", ")}] ${subject}\n${bodyText}\n`);
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: FROM_ADDRESS,
+      // BCC, not To — recipients are other admins and shouldn't see
+      // each other's addresses just from this notification.
+      to: FROM_ADDRESS,
+      bcc: recipients,
+      subject,
+      html: adminNotificationHtml(subject, bodyHtml),
+      text: bodyText,
+    });
+  } catch (err) {
+    throw new MailerError(err instanceof Error ? err.message : "Failed to send email.");
+  }
+}
+
+function adminNotificationHtml(subject: string, bodyHtml: string): string {
+  return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#111827;">
+  <p style="font-size:13px;color:#6b7280;margin:0 0 8px;letter-spacing:0.02em;">GFG CAMPUS CHAPTER · IKGPTU ADMIN</p>
+  <h1 style="font-size:18px;margin:0 0 16px;">${subject}</h1>
+  <div style="font-size:15px;color:#374151;line-height:1.6;">${bodyHtml}</div>
+</div>`;
+}

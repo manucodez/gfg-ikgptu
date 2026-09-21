@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addGalleryItem, getGalleryItems, saveUploadedImage } from "@/lib/content-store";
+import { addGalleryItem, getGalleryItems, saveUploadedImage, revalidateHomepageContent } from "@/lib/content-store";
 import type { GalleryItem } from "@/lib/types";
 
 // Every request must hit this handler fresh — GET routes with no
@@ -40,5 +40,6 @@ export async function POST(request: Request) {
   };
 
   await addGalleryItem(item);
+  revalidateHomepageContent();
   return NextResponse.json(item, { status: 201 });
 }

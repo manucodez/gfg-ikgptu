@@ -5,9 +5,11 @@ import {
   addChangeRequest,
   saveUploadedImage,
   deletePendingRequestForMember,
+  getAdminNotificationRecipients,
 } from "@/lib/content-store";
 import { SESSION_COOKIES, verifySessionToken, type MemberSessionPayload } from "@/lib/session";
 import { isValidUrl } from "@/lib/validation";
+import { sendAdminNotificationEmail } from "@/lib/mailer";
 import type { MemberChangeRequest, MemberEditableFields } from "@/lib/types";
 
 // Every request must hit this handler fresh — GET routes with no
@@ -89,6 +91,16 @@ export async function POST(request: Request) {
     previous.avatar = member.avatar;
   }
 
+  const codeforcesRaw = formData.get("codeforcesHandle");
+  if (codeforcesRaw !== null) {
+    const value = String(codeforcesRaw).trim();
+    const currentValue = member.codeforcesHandle ?? "";
+    if (value !== currentValue) {
+      changes.codeforcesHandle = value;
+      previous.codeforcesHandle = currentValue;
+    }
+  }
+
   if (Object.keys(changes).length === 0) {
     return NextResponse.json({ error: "No changes to submit." }, { status: 400 });
   }
@@ -104,6 +116,20 @@ export async function POST(request: Request) {
   };
 
   await addChangeRequest(changeRequest);
+
+  // Fire-and-forget — see the same pattern in app/api/join/route.ts.
+  getAdminNotificationRecipients()
+    .then((recipients) =>
+      sendAdminNotificationEmail(
+        recipients,
+        `Profile change request from ${member.name}`,
+        `<p><strong>${member.name}</strong> requested changes to ${Object.keys(changes).length === 1 ? "a field" : `${Object.keys(changes).length} fields`} on their profile.</p>
+         <p>Review it from the admin dashboard's Requests tab.</p>`,
+        `${member.name} requested changes to ${Object.keys(changes).length === 1 ? "a field" : `${Object.keys(changes).length} fields`} on their profile.\nReview it from the admin dashboard's Requests tab.`
+      )
+    )
+    .catch(() => {});
+
   return NextResponse.json(changeRequest, { status: 201 });
 }
 

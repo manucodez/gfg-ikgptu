@@ -6,6 +6,7 @@ import {
   saveUploadedImage,
   isEmailTakenByAnotherMember,
   setCredentialForMember,
+  revalidateHomepageContent,
 } from "@/lib/content-store";
 import { hashPassword } from "@/lib/password";
 import type { Member } from "@/lib/types";
@@ -50,6 +51,11 @@ export async function PATCH(
   const avatarFile = formData.get("avatarFile");
   if (avatarFile instanceof File && avatarFile.size > 0) {
     patch.avatar = await saveUploadedImage(avatarFile, "members");
+  }
+
+  const codeforcesHandle = formData.get("codeforcesHandle");
+  if (codeforcesHandle !== null) {
+    patch.codeforcesHandle = String(codeforcesHandle).trim() || undefined;
   }
 
   const socialFields = ["github", "linkedin", "email", "portfolio"] as const;
@@ -100,6 +106,7 @@ export async function PATCH(
   if (!updated) {
     return NextResponse.json({ error: "Member not found." }, { status: 404 });
   }
+  revalidateHomepageContent();
   return NextResponse.json(updated);
 }
 
@@ -108,5 +115,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   await deleteMember(params.id);
+  revalidateHomepageContent();
   return NextResponse.json({ ok: true });
 }

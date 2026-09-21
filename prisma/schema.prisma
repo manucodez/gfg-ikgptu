@@ -29,6 +29,13 @@ model Member {
   socialLinkedin  String?
   socialEmail     String?
   socialPortfolio String?
+  /** Optional Codeforces handle — if set, the member's profile shows a
+   *  live rating badge fetched from Codeforces' public API (see
+   *  lib/codeforces.ts). Free-text, not validated against Codeforces
+   *  at save time: an admin/member can set it before ever competing,
+   *  and a not-found handle just quietly shows no badge rather than
+   *  blocking the save. */
+  codeforcesHandle String?
   createdAt       DateTime @default(now())
   /** Admin-controlled display order (drag-and-drop reordering in the
    *  dashboard). Defaults to 0 for every existing row, which — paired
@@ -109,6 +116,17 @@ model Admin {
   name         String
   email        String   @unique
   passwordHash String
+  /** "owner" can create/delete admin accounts and change roles;
+   *  "admin" has full content-management access (members, events,
+   *  gallery, etc.) but can't manage other admins. Every admin created
+   *  before this column existed defaults to "admin" here — the very
+   *  first admin ever created (when the admins table is empty) is
+   *  always forced to "owner" by the API route regardless of what's
+   *  requested, so there's never a chapter site with zero owners. The
+   *  legacy env-var bootstrap login (see app/api/admin/login/route.ts)
+   *  is always treated as "owner" in code, without needing a row here.
+   */
+  role         String   @default("admin")
   createdAt    DateTime @default(now())
 
   @@map("admins")
@@ -194,4 +212,23 @@ model LoginEvent {
   member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@map("login_events")
+}
+
+// Anonymous, aggregate daily page-view counters — powers the admin
+// dashboard's Overview tab. Deliberately NOT per-visitor: no cookie,
+// no IP, no session id is stored, just "path X was viewed N times on
+// date Y" — consistent with this app's existing privacy stance (see
+// the comment on LoginEvent not tracking IP addresses). Incremented
+// via POST /api/track, called once per page load by
+// components/analytics/page-view-tracker.tsx.
+model PageView {
+  id    String @id @default(cuid())
+  /** YYYY-MM-DD, always computed server-side from the request time —
+   *  never trust a client-supplied date for this. */
+  date  String
+  path  String
+  count Int    @default(0)
+
+  @@unique([date, path])
+  @@map("page_views")
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteEvent, updateEvent } from "@/lib/content-store";
+import { deleteEvent, updateEvent, revalidateHomepageContent } from "@/lib/content-store";
 import { isValidUrl } from "@/lib/validation";
 import { EVENT_STATUSES, type ChapterEvent } from "@/lib/types";
 
@@ -66,6 +66,7 @@ export async function PATCH(
   if (!updated) {
     return NextResponse.json({ error: "Event not found." }, { status: 404 });
   }
+  revalidateHomepageContent();
   return NextResponse.json(updated);
 }
 
@@ -74,5 +75,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   await deleteEvent(params.id);
+  revalidateHomepageContent();
   return NextResponse.json({ ok: true });
 }

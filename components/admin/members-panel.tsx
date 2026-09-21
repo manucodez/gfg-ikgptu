@@ -19,8 +19,9 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Plus, Pencil, Trash2, Maximize2, KeyRound, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Maximize2, KeyRound, GripVertical, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Avatar } from "@/components/members/avatar";
 import { MemberForm } from "@/components/admin/member-form";
@@ -40,6 +41,13 @@ export function MembersPanel() {
   const [viewingAvatarOf, setViewingAvatarOf] = useState<Member | null>(null);
   const [savingOrder, setSavingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  // Client-side, over whatever's already loaded — the whole roster is
+  // already fetched up front for drag-and-drop reordering to work at
+  // all, so there's no separate server round-trip for this. See the
+  // comment on searchMembers() in lib/content-store.ts for why that
+  // (separate, real pagination) exists for a *different* list instead
+  // of being wired in here.
+  const [query, setQuery] = useState("");
 
   // Reorder requests are chained through this queue instead of firing
   // independently, so a second drag started while the first one is
@@ -139,17 +147,47 @@ export function MembersPanel() {
 
   if (!members) return <p className="text-sm text-ink-500 dark:text-white/50">Loading members...</p>;
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredMembers = normalizedQuery
+    ? members.filter((m) =>
+        [m.name, m.role, m.team, m.branch, m.year, ...m.skills].some((field) =>
+          field?.toLowerCase().includes(normalizedQuery)
+        )
+      )
+    : members;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-ink-500 dark:text-white/50">
-          {members.length} members
+          {normalizedQuery ? `${filteredMembers.length} of ${members.length} members` : `${members.length} members`}
           {savingOrder && <span className="ml-2 text-brand-600 dark:text-brand-400">Saving order...</span>}
         </p>
         {!adding && (
           <Button size="sm" onClick={() => setAdding(true)}>
             <Plus className="h-4 w-4" /> Add member
           </Button>
+        )}
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400 dark:text-white/30" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name, role, team, branch, skill..."
+          className="pl-9 pr-9"
+          aria-label="Search members"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700 dark:text-white/30 dark:hover:text-white/70"
+          >
+            <X className="h-4 w-4" />
+          </button>
         )}
       </div>
 
@@ -162,6 +200,7 @@ export function MembersPanel() {
       <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-white/40">
         <GripVertical className="h-3.5 w-3.5 shrink-0" />
         Drag the handle on any member to change the order they appear in on the site.
+        {normalizedQuery && " While searching, dragging reorders relative to the other matching members."}
       </p>
 
       {adding && (
@@ -174,47 +213,53 @@ export function MembersPanel() {
         />
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        {/* Excludes the member currently being edited: that row
-            renders as a plain form div below, not a SortableMemberRow,
-            so it has no sortable node for dnd-kit to measure. Leaving
-            its id in this list anyway is what threw the drag error —
-            dnd-kit expects every id here to match an actually-mounted
-            sortable node. Everyone else stays fully draggable; you
-            just can't drop directly onto the row that's mid-edit. */}
-        <SortableContext
-          items={members.filter((m) => m.id !== editingId).map((m) => m.id)}
-          strategy={rectSortingStrategy}
-        >
-          <div className="grid w-full min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-3">
-            {members.map((member) => {
-              const credential = credentialStatuses[member.id];
-              return editingId === member.id ? (
-                <div key={member.id} className="col-span-full">
-                  <MemberForm
-                    initial={member}
+      {normalizedQuery && filteredMembers.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-ink-900/15 p-6 text-center text-sm text-ink-500 dark:border-white/15 dark:text-white/50">
+          No members match &quot;{query}&quot;.
+        </p>
+      ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          {/* Excludes the member currently being edited: that row
+              renders as a plain form div below, not a SortableMemberRow,
+              so it has no sortable node for dnd-kit to measure. Leaving
+              its id in this list anyway is what threw the drag error —
+              dnd-kit expects every id here to match an actually-mounted
+              sortable node. Everyone else stays fully draggable; you
+              just can't drop directly onto the row that's mid-edit. */}
+          <SortableContext
+            items={filteredMembers.filter((m) => m.id !== editingId).map((m) => m.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid w-full min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-3">
+              {filteredMembers.map((member) => {
+                const credential = credentialStatuses[member.id];
+                return editingId === member.id ? (
+                  <div key={member.id} className="col-span-full">
+                    <MemberForm
+                      initial={member}
+                      credential={credential}
+                      onDone={() => {
+                        setEditingId(null);
+                        load();
+                      }}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  </div>
+                ) : (
+                  <SortableMemberRow
+                    key={member.id}
+                    member={member}
                     credential={credential}
-                    onDone={() => {
-                      setEditingId(null);
-                      load();
-                    }}
-                    onCancel={() => setEditingId(null)}
+                    onEdit={() => setEditingId(member.id)}
+                    onDelete={() => handleDelete(member.id)}
+                    onViewAvatar={() => member.avatar && setViewingAvatarOf(member)}
                   />
-                </div>
-              ) : (
-                <SortableMemberRow
-                  key={member.id}
-                  member={member}
-                  credential={credential}
-                  onEdit={() => setEditingId(member.id)}
-                  onDelete={() => handleDelete(member.id)}
-                  onViewAvatar={() => member.avatar && setViewingAvatarOf(member)}
-                />
-              );
-            })}
-          </div>
-        </SortableContext>
-      </DndContext>
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
 
       <Dialog open={!!viewingAvatarOf} onOpenChange={(open) => !open && setViewingAvatarOf(null)}>
         {viewingAvatarOf && (

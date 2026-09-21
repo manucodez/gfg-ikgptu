@@ -5,10 +5,12 @@ import {
   addChangeRequest,
   deletePendingRequestForMember,
   isEmailTakenByAnotherMember,
+  getAdminNotificationRecipients,
 } from "@/lib/content-store";
 import { hashPassword } from "@/lib/password";
 import { SESSION_COOKIES, verifySessionToken, type MemberSessionPayload } from "@/lib/session";
-import { isValidEmail } from "@/lib/validation";
+import { sendAdminNotificationEmail } from "@/lib/mailer";
+import { requestEmailChangeSchema, firstZodError } from "@/lib/schemas";
 import type { MemberChangeRequest } from "@/lib/types";
 
 // Every request must hit this handler fresh — GET routes with no
@@ -39,18 +41,11 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const newEmail = String(body?.newEmail ?? "").trim();
-  const newPassword = String(body?.newPassword ?? "");
-
-  if (!isValidEmail(newEmail)) {
-    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+  const parsed = requestEmailChangeSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstZodError(parsed) }, { status: 400 });
   }
-  if (newPassword.length < 8) {
-    return NextResponse.json(
-      { error: "Password must be at least 8 characters." },
-      { status: 400 }
-    );
-  }
+  const { newEmail, newPassword } = parsed.data;
 
   const currentEmail = member.socials.email ?? "";
   if (newEmail.toLowerCase() === currentEmail.toLowerCase()) {
@@ -83,6 +78,20 @@ export async function POST(request: Request) {
   };
 
   await addChangeRequest(changeRequest);
+
+  // Fire-and-forget — see the same pattern in app/api/join/route.ts.
+  getAdminNotificationRecipients()
+    .then((recipients) =>
+      sendAdminNotificationEmail(
+        recipients,
+        `Login email change request from ${member.name}`,
+        `<p><strong>${member.name}</strong> requested to change their login email.</p>
+         <p>Review it from the admin dashboard's Requests tab.</p>`,
+        `${member.name} requested to change their login email.\nReview it from the admin dashboard's Requests tab.`
+      )
+    )
+    .catch(() => {});
+
   return NextResponse.json(
     { ...changeRequest, emailChange: { previousEmail: currentEmail, newEmail } },
     { status: 201 }

@@ -23,6 +23,10 @@ export interface Member {
     email?: string;
     portfolio?: string;
   };
+  /** Optional Codeforces handle. When set, the member's profile shows
+   *  a live rating badge — see lib/codeforces.ts and
+   *  components/members/codeforces-badge.tsx. */
+  codeforcesHandle?: string;
 }
 
 export type EventStatus = "upcoming" | "live" | "past";
@@ -115,6 +119,9 @@ export interface MemberEditableFields {
   github: string;
   linkedin: string;
   portfolio: string;
+  /** Empty string means "no handle", same convention as the URL
+   *  fields above — see the note on github/linkedin/portfolio. */
+  codeforcesHandle: string;
 }
 
 export type ChangeRequestStatus = "pending" | "approved" | "rejected";
@@ -165,10 +172,16 @@ export interface MemberChangeRequest {
  * findAdminByEmail in lib/content-store.ts) only where actually
  * needed, at login.
  */
+export type AdminRole = "owner" | "admin";
+
 export interface Admin {
   id: string;
   name: string;
   email: string;
+  /** "owner" can manage other admins (create, remove, change roles);
+   *  "admin" has full content-management access but not that. See the
+   *  comment on the Admin model in prisma/schema.prisma. */
+  role: AdminRole;
   createdAt: string; // ISO timestamp
 }
 
@@ -239,4 +252,33 @@ export interface LoginEvent {
   memberName: string;
   loggedInAt: string; // ISO timestamp
   userAgent?: string;
+}
+
+/** One day's total page views, for the admin Overview tab's chart —
+ *  see getPageViewSummary in lib/content-store.ts. */
+export interface DailyPageViews {
+  date: string; // YYYY-MM-DD
+  views: number;
+}
+
+/** A single path's total views within a summary window, most-viewed
+ *  first — see getPageViewSummary in lib/content-store.ts. */
+export interface PathPageViews {
+  path: string;
+  views: number;
+}
+
+/** Aggregate counts + trends for the admin dashboard's Overview tab.
+ *  Everything here is either a simple count already cheap to compute
+ *  from existing tables, or the anonymous, aggregate PageView totals —
+ *  nothing here is per-visitor or per-member activity data. */
+export interface OverviewStats {
+  memberCount: number;
+  upcomingEventCount: number;
+  pastEventCount: number;
+  pendingChangeRequestCount: number;
+  newJoinRequestCount: number;
+  joinRequestFunnel: { new: number; contacted: number; archived: number };
+  last30DaysViews: DailyPageViews[];
+  topPaths: PathPageViews[];
 }

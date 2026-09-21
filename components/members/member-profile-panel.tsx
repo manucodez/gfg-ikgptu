@@ -4,6 +4,7 @@ import { Github, Linkedin, Mail, Globe, GraduationCap } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar } from "@/components/members/avatar";
 import { Badge } from "@/components/ui/badge";
+import { CodeforcesBadge } from "@/components/members/codeforces-badge";
 import { isValidEmail, isValidUrl } from "@/lib/validation";
 import { Member } from "@/lib/types";
 
@@ -59,6 +60,12 @@ export function MemberProfilePanel({ member, onOpenChange }: MemberProfilePanelP
                 ))}
               </div>
             </div>
+
+            {member.codeforcesHandle && (
+              <div className="mt-4">
+                <CodeforcesBadge memberId={member.id} />
+              </div>
+            )}
 
             {hasAnyLink && (
               <div className="mt-6 flex flex-wrap gap-2 border-t border-ink-900/10 pt-5 dark:border-white/10">

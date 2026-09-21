@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      # Placeholders, not real secrets — nothing in this workflow ever
+      # actually connects to Postgres/Cloudinary/Gmail (every page and
+      # API route here is force-dynamic or reads env vars at request
+      # time, not build time), these just need to be *some*
+      # syntactically valid value so top-level config code (e.g.
+      # lib/prisma.ts constructing the Neon adapter, prisma.config.ts,
+      # app/layout.tsx's metadata) doesn't throw while `npm ci`'s
+      # postinstall (`prisma generate`) and `next build` import every
+      # route to bundle it. Set at job level, not just on the build
+      # step, since `prisma generate` also needs DATABASE_URL and runs
+      # earlier, from npm ci's postinstall hook. Real values live in
+      # your hosting provider's project settings (Vercel env vars,
+      # etc.), set once there — never in this file.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/placeholder"
+      AUTH_SECRET: "ci-placeholder-secret-not-for-real-use-0000000000"
+      ADMIN_EMAIL: "admin@example.com"
+      ADMIN_PASSWORD_HASH_B64: "cGxhY2Vob2xkZXI="
+      CLOUDINARY_CLOUD_NAME: "placeholder"
+      CLOUDINARY_API_KEY: "placeholder"
+      CLOUDINARY_API_SECRET: "placeholder"
+      NEXT_PUBLIC_SITE_URL: "https://example.com"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build

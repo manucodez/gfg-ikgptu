@@ -10,28 +10,23 @@ import { AchievementsSection } from "@/components/achievements/achievements-sect
 import { ContactSection } from "@/components/contact/contact-section";
 import { Footer } from "@/components/footer";
 import {
-  getMembers,
-  getEvents,
-  getGalleryItems,
-  getStats,
-  getAchievements,
+  getPublicHomepageContent,
 } from "@/lib/content-store";
 import { getLoggedInMember } from "@/lib/current-member";
 
-// Content (members/events/gallery/stats/achievements) lives in the
-// database now and can change at runtime via the admin dashboard, so
-// this page reads it fresh on every request instead of being
-// statically generated at build time.
+// This page reads the visitor's own login cookie (via
+// getLoggedInMember, to personalize the navbar) on every request, so
+// it can't be statically cached as a whole page — see the comment on
+// getPublicHomepageContent in lib/content-store.ts for how the
+// members/events/gallery/stats/achievements data it also needs is
+// still cached, just underneath this per-request render rather than
+// at the page level.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [members, events, galleryItems, stats, achievements, loggedInMember] =
+  const [{ members, events, galleryItems, stats, achievements }, loggedInMember] =
     await Promise.all([
-      getMembers(),
-      getEvents(),
-      getGalleryItems(),
-      getStats(),
-      getAchievements(),
+      getPublicHomepageContent(),
       getLoggedInMember(),
     ]);
 

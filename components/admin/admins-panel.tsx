@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, KeyRound, Dices, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, KeyRound, Dices, Copy, Check, Eye, EyeOff, ShieldCheck, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Admin } from "@/lib/types";
@@ -95,12 +95,19 @@ function PasswordField({
   );
 }
 
-export function AdminsPanel() {
+export function AdminsPanel({
+  isOwner,
+  currentAdminId,
+}: {
+  isOwner: boolean;
+  currentAdminId: string;
+}) {
   const [admins, setAdmins] = useState<Admin[] | null>(null);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newRole, setNewRole] = useState<"admin" | "owner">("admin");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // Shown once right after a successful create, since the password
@@ -111,6 +118,7 @@ export function AdminsPanel() {
   const [resetPassword, setResetPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
   const [rowError, setRowError] = useState<{ id: string; message: string } | null>(null);
+  const [roleBusyId, setRoleBusyId] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch("/api/admin/admins");
@@ -126,6 +134,7 @@ export function AdminsPanel() {
     setName("");
     setEmail("");
     setPassword("");
+    setNewRole("admin");
     setError(null);
   }
 
@@ -136,7 +145,7 @@ export function AdminsPanel() {
     const res = await fetch("/api/admin/admins", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, role: newRole }),
     });
     if (res.ok) {
       setJustCreated({ email, password });
@@ -169,6 +178,28 @@ export function AdminsPanel() {
     }
   }
 
+  async function handleToggleRole(admin: Admin) {
+    const nextRole = admin.role === "owner" ? "admin" : "owner";
+    const verb = nextRole === "owner" ? "promote" : "demote";
+    if (!confirm(`${verb === "promote" ? "Promote" : "Demote"} ${admin.name} ${verb === "promote" ? "to" : "from"} owner?`)) {
+      return;
+    }
+    setRoleBusyId(admin.id);
+    setRowError(null);
+    const res = await fetch(`/api/admin/admins/${admin.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: nextRole }),
+    });
+    if (res.ok) {
+      load();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setRowError({ id: admin.id, message: data.error ?? "Couldn't change this admin's role." });
+    }
+    setRoleBusyId(null);
+  }
+
   async function handleDelete(admin: Admin) {
     if (!confirm(`Remove ${admin.name}'s admin account? They'll be signed out immediately.`)) return;
     setRowError(null);
@@ -190,12 +221,19 @@ export function AdminsPanel() {
           {admins.length} {admins.length === 1 ? "admin" : "admins"} · each signs in with their own email
           and password
         </p>
-        {!adding && (
+        {!adding && isOwner && (
           <Button size="sm" onClick={() => { setAdding(true); setJustCreated(null); }}>
             <Plus className="h-4 w-4" /> Add admin
           </Button>
         )}
       </div>
+
+      {!isOwner && (
+        <p className="rounded-lg bg-ink-900/5 px-3 py-2 text-xs text-ink-500 dark:bg-white/5 dark:text-white/50">
+          You can reset passwords here, but only an owner can add, remove, or change the role of an
+          admin account.
+        </p>
+      )}
 
       {justCreated && (
         <div className="space-y-2 rounded-2xl border border-brand-600/30 bg-brand-600/5 p-5">
@@ -211,7 +249,7 @@ export function AdminsPanel() {
         </div>
       )}
 
-      {adding && (
+      {adding && isOwner && (
         <form onSubmit={handleAdd} className="space-y-4 rounded-2xl border border-ink-900/10 p-5 dark:border-white/10">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
@@ -232,6 +270,17 @@ export function AdminsPanel() {
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium">Password</span>
             <PasswordField value={password} onChange={setPassword} />
+          </label>
+          <label className="block max-w-xs">
+            <span className="mb-1.5 block text-sm font-medium">Role</span>
+            <select
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value === "owner" ? "owner" : "admin")}
+              className="h-10 w-full rounded-lg border border-ink-900/15 bg-white px-3 text-sm dark:border-white/15 dark:bg-surface-darkRaised"
+            >
+              <option value="admin">Admin — full content access</option>
+              <option value="owner">Owner — can also manage admins</option>
+            </select>
           </label>
           {error && (
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-400">
@@ -254,13 +303,35 @@ export function AdminsPanel() {
           <div key={admin.id} className="rounded-2xl border border-ink-900/10 p-4 dark:border-white/10">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-medium">{admin.name}</p>
+                <p className="flex items-center gap-1.5 font-medium">
+                  {admin.name}
+                  {admin.role === "owner" && (
+                    <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+                      Owner
+                    </span>
+                  )}
+                  {admin.id === currentAdminId && (
+                    <span className="text-xs font-normal text-ink-500 dark:text-white/40">(you)</span>
+                  )}
+                </p>
                 <p className="truncate text-sm text-ink-500 dark:text-white/50">{admin.email}</p>
                 <p className="mt-0.5 text-xs text-ink-500 dark:text-white/40">
                   Added {new Date(admin.createdAt).toLocaleDateString()}
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRole(admin)}
+                    disabled={roleBusyId === admin.id}
+                    aria-label={admin.role === "owner" ? `Demote ${admin.name} to admin` : `Promote ${admin.name} to owner`}
+                    title={admin.role === "owner" ? "Demote to admin" : "Promote to owner"}
+                    className="rounded-full p-2.5 text-ink-500 hover:bg-ink-900/5 disabled:opacity-50 dark:text-white/50 dark:hover:bg-white/10"
+                  >
+                    {admin.role === "owner" ? <Shield className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -273,14 +344,16 @@ export function AdminsPanel() {
                 >
                   <KeyRound className="h-4 w-4" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(admin)}
-                  aria-label={`Remove ${admin.name}`}
-                  className="rounded-full p-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(admin)}
+                    aria-label={`Remove ${admin.name}`}
+                    className="rounded-full p-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearMemberAvatar } from "@/lib/content-store";
+import { clearMemberAvatar, revalidateHomepageContent } from "@/lib/content-store";
 
 // Every request must hit this handler fresh — GET routes with no
 // per-request API usage can otherwise get statically pre-rendered
@@ -22,5 +22,6 @@ export async function DELETE(
   if (!updated) {
     return NextResponse.json({ error: "Member not found." }, { status: 404 });
   }
+  revalidateHomepageContent();
   return NextResponse.json(updated);
 }

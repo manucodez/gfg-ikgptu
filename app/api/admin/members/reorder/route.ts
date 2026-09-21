@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { reorderMembers } from "@/lib/content-store";
+import { reorderMembers, revalidateHomepageContent } from "@/lib/content-store";
 
 // Every request must hit this handler fresh — GET routes with no
 // per-request API usage can otherwise get statically pre-rendered
@@ -41,13 +41,15 @@ export async function POST(request: Request) {
     );
   }
 
-  // The homepage reads members straight from the database on every
-  // request (it's `force-dynamic`), so a hard reload already shows
-  // the new order — but Next's client-side router cache can still
-  // serve a stale cached copy of "/" when the admin navigates there
-  // with a normal link/back-navigation instead of a full reload.
-  // revalidatePath clears that cache entry so the new order shows up
-  // immediately on next visit, not just after a manual refresh.
+  // The homepage reads members via getPublicHomepageContent, which
+  // caches the combined read for up to 60 seconds (see the comment on
+  // that function in lib/content-store.ts) — revalidateHomepageContent
+  // clears that cache entry so the new order is reflected immediately
+  // rather than after that window elapses. revalidatePath additionally
+  // clears Next's client-side router cache for "/", for an admin who
+  // navigates there with a normal link/back-navigation instead of a
+  // full reload.
+  revalidateHomepageContent();
   revalidatePath("/");
 
   return NextResponse.json({ ok: true });

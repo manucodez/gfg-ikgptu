@@ -6,6 +6,8 @@ import {
   type AdminSessionPayload,
 } from "@/lib/session";
 import { findAdminByEmail } from "@/lib/content-store";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { adminLoginSchema, firstZodError } from "@/lib/schemas";
 
 // Every request must hit this handler fresh — GET routes with no
 // per-request API usage can otherwise get statically pre-rendered
@@ -26,16 +28,26 @@ async function respondWithSession(payload: AdminSessionPayload) {
 }
 
 export async function POST(request: Request) {
-  const { email, password } = await request.json();
-
-  if (!email || !password) {
-    return NextResponse.json(
-      { error: "Enter your admin email and password." },
-      { status: 400 }
-    );
+  const body = await request.json().catch(() => null);
+  const parsed = adminLoginSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstZodError(parsed) }, { status: 400 });
   }
+  const { email, password } = parsed.data;
 
-  const normalizedEmail = String(email).trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Stricter than the member login limit — an admin account is a much
+  // higher-value target, and there are far fewer legitimate admins
+  // sharing an IP than there are members sharing a campus network.
+  const ip = getClientIp(request);
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkRateLimit(`admin-login:ip:${ip}`, 10, 15 * 60_000),
+    checkRateLimit(`admin-login:email:${normalizedEmail}`, 5, 15 * 60_000),
+  ]);
+  if (!ipLimit.ok || !emailLimit.ok) {
+    return rateLimitResponse(Math.max(ipLimit.retryAfterSeconds ?? 0, emailLimit.retryAfterSeconds ?? 0));
+  }
 
   // Database-backed admin accounts — created from the dashboard's
   // Admins tab. This is checked first since it's where every admin
@@ -51,6 +63,7 @@ export async function POST(request: Request) {
       sub: admin.id,
       email: admin.email,
       name: admin.name,
+      adminRole: admin.role,
     });
   }
 
@@ -71,6 +84,7 @@ export async function POST(request: Request) {
         sub: "env-admin",
         email: adminEmail,
         name: "Admin",
+        adminRole: "owner",
       });
     }
   }

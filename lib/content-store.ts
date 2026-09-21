@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { uploadImage, deleteImage, uploadRawFile } from "@/lib/cloudinary";
 import type {
@@ -15,6 +16,9 @@ import type {
   JoinRequestStatus,
   LoginEvent,
   Admin,
+  DailyPageViews,
+  PathPageViews,
+  OverviewStats,
 } from "@/lib/types";
 import { parseDateValue } from "@/lib/utils";
 
@@ -48,6 +52,7 @@ type MemberRow = {
   socialLinkedin: string | null;
   socialEmail: string | null;
   socialPortfolio: string | null;
+  codeforcesHandle: string | null;
 };
 
 function toMember(row: MemberRow): Member {
@@ -67,6 +72,7 @@ function toMember(row: MemberRow): Member {
       email: row.socialEmail ?? undefined,
       portfolio: row.socialPortfolio ?? undefined,
     },
+    codeforcesHandle: row.codeforcesHandle ?? undefined,
   };
 }
 
@@ -85,6 +91,7 @@ function memberToRow(member: Member) {
     socialLinkedin: member.socials.linkedin ?? null,
     socialEmail: member.socials.email ?? null,
     socialPortfolio: member.socials.portfolio ?? null,
+    codeforcesHandle: member.codeforcesHandle ?? null,
   };
 }
 
@@ -93,6 +100,62 @@ export async function getMembers(): Promise<Member[]> {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
   return rows.map(toMember);
+}
+
+export interface MemberSearchOptions {
+  /** Case-insensitive substring match against name, role, team,
+   *  branch, and skills. */
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Search + paginate members server-side — used by the admin Members
+ * tab's search box (see components/admin/members-panel.tsx) so an
+ * admin can actually find someone once the roster grows past a
+ * screenful. Kept as a *separate* function from getMembers() rather
+ * than adding optional params there, so every existing caller of
+ * getMembers() (the public member grid, the homepage) is completely
+ * unaffected — sort order for the drag-and-drop-reorderable admin
+ * list still always follows sortOrder/createdAt, same as before.
+ */
+export async function searchMembers(options: MemberSearchOptions): Promise<PagedResult<Member>> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.min(200, Math.max(1, options.pageSize ?? 50));
+  const search = options.search?.trim();
+
+  const where = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: "insensitive" as const } },
+          { role: { contains: search, mode: "insensitive" as const } },
+          { team: { contains: search, mode: "insensitive" as const } },
+          { branch: { contains: search, mode: "insensitive" as const } },
+          { year: { contains: search, mode: "insensitive" as const } },
+          { skills: { has: search } },
+        ],
+      }
+    : undefined;
+
+  const [rows, total] = await Promise.all([
+    prisma.member.findMany({
+      where,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.member.count({ where }),
+  ]);
+
+  return { items: rows.map(toMember), total, page, pageSize };
 }
 
 /** Replaces the given members wholesale (upserting each by id) — kept
@@ -160,6 +223,7 @@ export async function updateMember(id: string, patch: Partial<Member>): Promise<
   if ("bio" in patch) data.bio = patch.bio;
   if ("skills" in patch) data.skills = patch.skills;
   if ("avatar" in patch) data.avatar = patch.avatar ?? null;
+  if ("codeforcesHandle" in patch) data.codeforcesHandle = patch.codeforcesHandle ?? null;
   if ("socials" in patch) {
     data.socialGithub = patch.socials?.github ?? null;
     data.socialLinkedin = patch.socials?.linkedin ?? null;
@@ -440,6 +504,39 @@ export async function saveChangeRequests(requests: MemberChangeRequest[]): Promi
   );
 }
 
+export interface ChangeRequestPageOptions {
+  status?: "pending" | "approved" | "rejected";
+  page?: number;
+  pageSize?: number;
+}
+
+/** Paginated version of getChangeRequests, used for the "recently
+ *  resolved" history list in components/admin/requests-panel.tsx once
+ *  it grows past a first page. Pending requests are still fetched via
+ *  getChangeRequests() (unpaginated) — a review queue an admin is
+ *  actively working through should always show every pending item,
+ *  and it's expected to stay small since it only grows between
+ *  reviews. */
+export async function getChangeRequestsPage(
+  options: ChangeRequestPageOptions = {}
+): Promise<PagedResult<MemberChangeRequest>> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, options.pageSize ?? 20));
+  const where = options.status ? { status: options.status } : undefined;
+
+  const [rows, total] = await Promise.all([
+    prisma.memberChangeRequest.findMany({
+      where,
+      orderBy: { submittedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.memberChangeRequest.count({ where }),
+  ]);
+
+  return { items: rows.map(toChangeRequest), total, page, pageSize };
+}
+
 export async function getPendingRequestForMember(
   memberId: string,
   kind: "profile" | "email" = "profile"
@@ -563,11 +660,18 @@ export async function deleteCredentialForMember(memberId: string): Promise<void>
 
 // --- Admins (people who can sign in to /admin) -----------------------
 
-function toAdmin(row: { id: string; name: string; email: string; createdAt: Date }): Admin {
+function toAdmin(row: {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: Date;
+}): Admin {
   return {
     id: row.id,
     name: row.name,
     email: row.email,
+    role: row.role === "owner" ? "owner" : "admin",
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -575,6 +679,20 @@ function toAdmin(row: { id: string; name: string; email: string; createdAt: Date
 export async function getAdmins(): Promise<Admin[]> {
   const rows = await prisma.admin.findMany({ orderBy: { createdAt: "asc" } });
   return rows.map(toAdmin);
+}
+
+/** Every address that should hear about something needing admin
+ *  attention (a new join request, a new profile change request) —
+ *  every database-backed admin's email, plus the env-var fallback
+ *  admin's address if that's configured, deduplicated. Used by
+ *  app/api/join and app/api/member/request-change /
+ *  request-email-change; see lib/mailer.ts's sendAdminNotificationEmail. */
+export async function getAdminNotificationRecipients(): Promise<string[]> {
+  const admins = await getAdmins();
+  const addresses = new Set(admins.map((a) => a.email));
+  const envAdminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  if (envAdminEmail) addresses.add(envAdminEmail);
+  return Array.from(addresses);
 }
 
 export async function countAdmins(): Promise<number> {
@@ -602,6 +720,7 @@ export async function addAdmin(admin: {
   name: string;
   email: string;
   passwordHash: string;
+  role: "owner" | "admin";
 }): Promise<Admin> {
   const row = await prisma.admin.create({
     data: { ...admin, email: admin.email.toLowerCase() },
@@ -611,6 +730,29 @@ export async function addAdmin(admin: {
 
 export async function updateAdminPassword(id: string, passwordHash: string): Promise<void> {
   await prisma.admin.update({ where: { id }, data: { passwordHash } });
+}
+
+/** Promotes/demotes another admin. Only ever called after the caller
+ *  (an "owner") has already been verified — see app/api/admin/admins/
+ *  [id]/route.ts. */
+export async function updateAdminRole(id: string, role: "owner" | "admin"): Promise<Admin | null> {
+  try {
+    const row = await prisma.admin.update({ where: { id }, data: { role } });
+    return toAdmin(row);
+  } catch {
+    return null;
+  }
+}
+
+/** True if at least one "owner"-role admin exists other than
+ *  (optionally) the one given — used to stop the last owner from
+ *  demoting themselves or being demoted, which would leave the site
+ *  with no one able to manage admin accounts short of the env-var
+ *  fallback login. */
+export async function countOtherOwners(excludeId?: string): Promise<number> {
+  return prisma.admin.count({
+    where: { role: "owner", ...(excludeId ? { id: { not: excludeId } } : {}) },
+  });
 }
 
 export async function deleteAdmin(id: string): Promise<void> {
@@ -699,6 +841,16 @@ export async function incrementOtpAttempts(email: string): Promise<void> {
     where: { email: row.email },
     data: { attempts: row.attempts + 1 },
   });
+}
+
+/** Deletes OTP rows past their expiry — normally each one is already
+ *  deleted the moment it's used or superseded (see createOtpRequest /
+ *  deleteOtpRequestForEmail above), but a code a member requested and
+ *  then never entered is left behind until this runs. Called from the
+ *  scheduled cleanup route, see app/api/cron/cleanup/route.ts. */
+export async function pruneExpiredOtpRequests(): Promise<number> {
+  const result = await prisma.otpRequest.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  return result.count;
 }
 
 export async function deleteOtpRequestForEmail(email: string): Promise<void> {
@@ -853,6 +1005,62 @@ export async function getJoinRequests(): Promise<JoinRequest[]> {
   return rows.map(toJoinRequest);
 }
 
+export interface JoinRequestPageOptions {
+  status?: JoinRequestStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+/** Paginated version of getJoinRequests, for the admin Join Requests
+ *  tab once submissions run into the hundreds/thousands over a
+ *  chapter's lifetime — see components/admin/join-requests-panel.tsx.
+ *  getJoinRequests() above is left untouched for any other caller. */
+export async function getJoinRequestsPage(
+  options: JoinRequestPageOptions = {}
+): Promise<PagedResult<JoinRequest>> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, options.pageSize ?? 20));
+  const where = options.status ? { status: options.status } : undefined;
+
+  const [rows, total] = await Promise.all([
+    prisma.joinRequest.findMany({
+      where,
+      orderBy: { submittedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.joinRequest.count({ where }),
+  ]);
+
+  return { items: rows.map(toJoinRequest), total, page, pageSize };
+}
+
+/** Total count of unreviewed ("new") join requests — used for the
+ *  admin dashboard tab's live badge independent of whatever page of
+ *  results is currently loaded, see the Join Requests API route. */
+export async function countNewJoinRequests(): Promise<number> {
+  return prisma.joinRequest.count({ where: { status: "new" } });
+}
+
+/** Bulk status update, for the Join Requests tab's multi-select
+ *  actions (e.g. "Mark 12 as contacted"). Ignores ids that don't
+ *  exist rather than failing the whole batch over one stale row. */
+export async function bulkUpdateJoinRequestStatus(
+  ids: string[],
+  status: JoinRequestStatus
+): Promise<number> {
+  if (ids.length === 0) return 0;
+  const result = await prisma.joinRequest.updateMany({ where: { id: { in: ids } }, data: { status } });
+  return result.count;
+}
+
+/** Bulk delete, for the Join Requests tab's multi-select actions. */
+export async function bulkDeleteJoinRequests(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const result = await prisma.joinRequest.deleteMany({ where: { id: { in: ids } } });
+  return result.count;
+}
+
 export async function addJoinRequest(request: JoinRequest): Promise<void> {
   await prisma.joinRequest.create({
     data: {
@@ -929,6 +1137,19 @@ export async function getRecentLoginEvents(limit = 100): Promise<LoginEvent[]> {
   return rows.map(toLoginEvent);
 }
 
+/** Deletes login-activity rows older than `days` — this table is
+ *  append-only (one row per successful member login, forever) with no
+ *  other cleanup, so left alone it grows without bound over the life
+ *  of the chapter. Called from the scheduled cleanup route (see
+ *  app/api/cron/cleanup/route.ts); safe to also run by hand from
+ *  `npx prisma studio` or a one-off script. Returns the number of
+ *  rows removed, purely for the cleanup route's response/logging. */
+export async function pruneOldLoginEvents(days = 90): Promise<number> {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const result = await prisma.loginEvent.deleteMany({ where: { loggedInAt: { lt: cutoff } } });
+  return result.count;
+}
+
 // --- Resume/CV uploads (public "Join" form) --------------------------
 
 /**
@@ -939,4 +1160,141 @@ export async function getRecentLoginEvents(limit = 100): Promise<LoginEvent[]> {
  */
 export async function saveUploadedResume(file: File): Promise<string> {
   return uploadRawFile(file, "resumes");
+}
+
+// --- Cached homepage read (public site only) --------------------------
+// getMembers/getEvents/getGalleryItems/getStats/getAchievements above
+// stay uncached and are what every admin route calls directly, so the
+// dashboard always sees the instant the moment it saves something.
+// app/page.tsx is a different case: it's the one place these five
+// queries all run together on *every single visitor's* page load, so
+// this wraps that combined read in Next's Data Cache for up to 60
+// seconds, cutting repeat-visitor database load without touching the
+// admin-facing functions' always-fresh behavior at all. (The page
+// itself still renders per-request — it reads the visitor's own login
+// cookie to personalize the navbar, so it can't be full-page ISR
+// cached without risking one visitor's session leaking into another's
+// cached HTML. This caches only the shared data underneath that.)
+export const getPublicHomepageContent = unstable_cache(
+  async () => {
+    const [members, events, galleryItems, stats, achievements] = await Promise.all([
+      getMembers(),
+      getEvents(),
+      getGalleryItems(),
+      getStats(),
+      getAchievements(),
+    ]);
+    return { members, events, galleryItems, stats, achievements };
+  },
+  ["public-homepage-content"],
+  { revalidate: 60, tags: ["homepage-content"] }
+);
+
+/** Called from every admin route that changes members, events,
+ *  gallery, stats, or achievements, so an edit shows up on the public
+ *  site immediately rather than waiting up to 60 seconds for
+ *  getPublicHomepageContent's cache to expire on its own. */
+export function revalidateHomepageContent(): void {
+  revalidateTag("homepage-content");
+}
+
+
+// See the comment on the PageView model in prisma/schema.prisma for
+// what this deliberately does and doesn't track.
+
+function todayDateKey(): string {
+  // UTC, not server-local time — consistent regardless of which
+  // region a serverless invocation happens to run in.
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Increments today's view counter for `path` by one. Called from
+ *  POST /api/track once per page load (see
+ *  components/analytics/page-view-tracker.tsx). One upsert, so
+ *  concurrent hits on the same path/day never race-overwrite each
+ *  other the way a read-then-write would. */
+export async function trackPageView(path: string): Promise<void> {
+  const date = todayDateKey();
+  await prisma.pageView.upsert({
+    where: { date_path: { date, path } },
+    create: { date, path, count: 1 },
+    update: { count: { increment: 1 } },
+  });
+}
+
+/** Daily totals for the last `days` days (including days with zero
+ *  views, so the admin Overview chart has an even x-axis) plus the
+ *  most-viewed paths across that same window. */
+export async function getPageViewSummary(
+  days = 30
+): Promise<{ daily: DailyPageViews[]; topPaths: PathPageViews[] }> {
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - (days - 1));
+  since.setUTCHours(0, 0, 0, 0);
+
+  const rows = await prisma.pageView.findMany({
+    where: { date: { gte: since.toISOString().slice(0, 10) } },
+  });
+
+  const byDate = new Map<string, number>();
+  const byPath = new Map<string, number>();
+  for (const row of rows as { date: string; path: string; count: number }[]) {
+    byDate.set(row.date, (byDate.get(row.date) ?? 0) + row.count);
+    byPath.set(row.path, (byPath.get(row.path) ?? 0) + row.count);
+  }
+
+  const daily: DailyPageViews[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since);
+    d.setUTCDate(d.getUTCDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    daily.push({ date: key, views: byDate.get(key) ?? 0 });
+  }
+
+  const topPaths: PathPageViews[] = Array.from(byPath.entries())
+    .map(([path, views]) => ({ path, views }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 8);
+
+  return { daily, topPaths };
+}
+
+/** Everything the admin Overview tab shows in one call — counts
+ *  derived from existing tables (cheap: they're all indexed lookups
+ *  or small tables) plus the page-view summary above. */
+export async function getOverviewStats(): Promise<OverviewStats> {
+  const [
+    memberCount,
+    upcomingEventCount,
+    pastEventCount,
+    pendingChangeRequestCount,
+    newJoinRequestCount,
+    contactedJoinRequestCount,
+    archivedJoinRequestCount,
+    { daily, topPaths },
+  ] = await Promise.all([
+    prisma.member.count(),
+    prisma.chapterEvent.count({ where: { status: { in: ["upcoming", "live"] } } }),
+    prisma.chapterEvent.count({ where: { status: "past" } }),
+    prisma.memberChangeRequest.count({ where: { status: "pending" } }),
+    prisma.joinRequest.count({ where: { status: "new" } }),
+    prisma.joinRequest.count({ where: { status: "contacted" } }),
+    prisma.joinRequest.count({ where: { status: "archived" } }),
+    getPageViewSummary(30),
+  ]);
+
+  return {
+    memberCount,
+    upcomingEventCount,
+    pastEventCount,
+    pendingChangeRequestCount,
+    newJoinRequestCount,
+    joinRequestFunnel: {
+      new: newJoinRequestCount,
+      contacted: contactedJoinRequestCount,
+      archived: archivedJoinRequestCount,
+    },
+    last30DaysViews: daily,
+    topPaths,
+  };
 }

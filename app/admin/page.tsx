@@ -27,6 +27,11 @@ export default async function AdminPage() {
               <p className="font-display text-sm font-semibold leading-tight">Admin Dashboard</p>
               <p className="truncate text-xs text-ink-500 dark:text-white/50">
                 {session.name} · {session.email}
+                {session.adminRole === "owner" && (
+                  <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+                    Owner
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -40,7 +45,7 @@ export default async function AdminPage() {
       </div>
 
       <div className="mx-auto w-full max-w-4xl px-4 py-10">
-        <AdminDashboard />
+        <AdminDashboard session={session} />
       </div>
     </main>
   );

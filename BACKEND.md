@@ -86,6 +86,18 @@ that still works that way, everything below is the upgrade that was applied.
 `npx prisma studio` gives you a browsable UI over the actual database
 tables at any point, which is handy for spot-checking things.
 
+### New optional environment variables
+
+None of these are required to run the site — every feature they
+enable degrades gracefully without them (see CHANGES.md for the full
+list of what's new). Add whichever you want to turn on:
+
+| Variable | Enables | Without it |
+|---|---|---|
+| `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` | Shared rate limiting across serverless instances (from [upstash.com](https://upstash.com), free tier) | Rate limiting still works per-instance in memory — fine for one Node server, weaker (but not absent) on multi-instance serverless hosting |
+| `CRON_SECRET` | The daily cleanup cron job (`/api/cron/cleanup`, scheduled in `vercel.json`) | The cron route refuses every request rather than running unauthenticated — old login/OTP rows just accumulate instead of being pruned |
+| `NEXT_PUBLIC_SITE_URL` | Correct absolute URLs in Open Graph/Twitter link previews, `sitemap.xml`, and calendar (.ics) event links | Falls back to `http://localhost:3000` — fine for local dev, set this to your real domain in production |
+
 ## The "Join" form
 
 The public "Join" form on the homepage (`components/contact/contact-section.tsx`)

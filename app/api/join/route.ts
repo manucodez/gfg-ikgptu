@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { addJoinRequest, saveUploadedResume } from "@/lib/content-store";
-import { isValidEmail } from "@/lib/validation";
+import { addJoinRequest, getAdminNotificationRecipients, saveUploadedResume } from "@/lib/content-store";
+import { sendAdminNotificationEmail } from "@/lib/mailer";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { joinRequestSchema, firstZodError } from "@/lib/schemas";
 import type { JoinRequest } from "@/lib/types";
 
 // Every request must hit this handler fresh — GET routes with no
@@ -20,6 +22,10 @@ const MAX_RESUME_BYTES = 5 * 1024 * 1024; // 5MB
 // /api/admin and /api/member. Anyone on the homepage can submit this.
 // FormData (not JSON) since the form can include a resume file.
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const { ok, retryAfterSeconds } = await checkRateLimit(`join:ip:${ip}`, 5, 60 * 60_000);
+  if (!ok) return rateLimitResponse(retryAfterSeconds ?? 3600);
+
   const formData = await request.formData().catch(() => null);
   if (!formData) {
     return NextResponse.json({ error: "Invalid submission." }, { status: 400 });
@@ -31,11 +37,9 @@ export async function POST(request: Request) {
   const year = String(formData.get("year") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
 
-  if (!name || !branch || !year) {
-    return NextResponse.json({ error: "Name, branch, and year are required." }, { status: 400 });
-  }
-  if (!isValidEmail(email)) {
-    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+  const parsed = joinRequestSchema.safeParse({ name, email, branch, year, message });
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstZodError(parsed) }, { status: 400 });
   }
 
   let resumeUrl: string | undefined;
@@ -66,5 +70,23 @@ export async function POST(request: Request) {
   };
 
   await addJoinRequest(joinRequest);
+
+  // Fire-and-forget: a notification failing (or Gmail not being
+  // configured, in which case this just logs) should never make the
+  // actual join submission fail for the applicant.
+  getAdminNotificationRecipients()
+    .then((recipients) =>
+      sendAdminNotificationEmail(
+        recipients,
+        `New join request from ${name}`,
+        `<p><strong>${name}</strong> (${branch}, Year ${year}) submitted a join request.</p>
+         <p>Email: ${email}</p>
+         ${message ? `<p>Message: ${message}</p>` : ""}
+         <p>Review it from the admin dashboard's Join Requests tab.</p>`,
+        `${name} (${branch}, Year ${year}) submitted a join request.\nEmail: ${email}\n${message ? `Message: ${message}\n` : ""}Review it from the admin dashboard's Join Requests tab.`
+      )
+    )
+    .catch(() => {});
+
   return NextResponse.json({ ok: true }, { status: 201 });
 }

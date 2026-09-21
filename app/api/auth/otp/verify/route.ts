@@ -8,6 +8,7 @@ import {
 } from "@/lib/content-store";
 import { isOtpExpired, MAX_OTP_ATTEMPTS } from "@/lib/otp";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { otpVerifySchema, firstZodError } from "@/lib/schemas";
 
 // Every request must hit this handler fresh — GET routes with no
 // per-request API usage can otherwise get statically pre-rendered
@@ -15,20 +16,12 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const { email, code, newPassword } = await request.json();
-
-  if (!email || !code || !newPassword) {
-    return NextResponse.json(
-      { error: "Enter the code and a new password." },
-      { status: 400 }
-    );
+  const body = await request.json().catch(() => null);
+  const parsed = otpVerifySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstZodError(parsed) }, { status: 400 });
   }
-  if (String(newPassword).length < 8) {
-    return NextResponse.json(
-      { error: "Password must be at least 8 characters." },
-      { status: 400 }
-    );
-  }
+  const { email, code, newPassword } = parsed.data;
 
   const otpRequest = await getOtpRequestForEmail(email);
   if (!otpRequest) {

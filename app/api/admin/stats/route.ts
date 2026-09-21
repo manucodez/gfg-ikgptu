@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addStat, getStats } from "@/lib/content-store";
+import { addStat, getStats, revalidateHomepageContent } from "@/lib/content-store";
 import type { StatItem } from "@/lib/types";
 
 // Every request must hit this handler fresh — GET routes with no
@@ -35,5 +35,6 @@ export async function POST(request: Request) {
   };
 
   await addStat(stat);
+  revalidateHomepageContent();
   return NextResponse.json(stat, { status: 201 });
 }

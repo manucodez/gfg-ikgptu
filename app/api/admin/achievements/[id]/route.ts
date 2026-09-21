@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteAchievement, updateAchievement } from "@/lib/content-store";
+import { deleteAchievement, updateAchievement, revalidateHomepageContent } from "@/lib/content-store";
 import { parseDateValue } from "@/lib/utils";
 import type { Achievement } from "@/lib/types";
 
@@ -27,6 +27,7 @@ export async function PATCH(
   if (!updated) {
     return NextResponse.json({ error: "Achievement not found." }, { status: 404 });
   }
+  revalidateHomepageContent();
   return NextResponse.json(updated);
 }
 
@@ -35,5 +36,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   await deleteAchievement(params.id);
+  revalidateHomepageContent();
   return NextResponse.json({ ok: true });
 }

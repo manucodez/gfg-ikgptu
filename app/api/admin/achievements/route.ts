@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addAchievement, getAchievements } from "@/lib/content-store";
+import { addAchievement, getAchievements, revalidateHomepageContent } from "@/lib/content-store";
 import { parseDateValue } from "@/lib/utils";
 import type { Achievement } from "@/lib/types";
 
@@ -38,5 +38,6 @@ export async function POST(request: Request) {
   };
 
   await addAchievement(achievement);
+  revalidateHomepageContent();
   return NextResponse.json(achievement, { status: 201 });
 }

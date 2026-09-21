@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addEvent, getEvents } from "@/lib/content-store";
+import { addEvent, getEvents, revalidateHomepageContent } from "@/lib/content-store";
 import { isValidUrl } from "@/lib/validation";
 import { EVENT_STATUSES, type ChapterEvent } from "@/lib/types";
 
@@ -70,5 +70,6 @@ export async function POST(request: Request) {
   };
 
   await addEvent(event);
+  revalidateHomepageContent();
   return NextResponse.json(event, { status: 201 });
 }

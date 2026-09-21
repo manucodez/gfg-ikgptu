@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteStat, updateStat } from "@/lib/content-store";
+import { deleteStat, updateStat, revalidateHomepageContent } from "@/lib/content-store";
 import type { StatItem } from "@/lib/types";
 
 // Every request must hit this handler fresh — GET routes with no
@@ -28,6 +28,7 @@ export async function PATCH(
   if (!updated) {
     return NextResponse.json({ error: "Stat not found." }, { status: 404 });
   }
+  revalidateHomepageContent();
   return NextResponse.json(updated);
 }
 
@@ -36,5 +37,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   await deleteStat(params.id);
+  revalidateHomepageContent();
   return NextResponse.json({ ok: true });
 }
